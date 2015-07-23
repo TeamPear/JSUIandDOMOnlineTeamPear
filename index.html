@@ -6,8 +6,8 @@
     <title>Team Pear</title>
     <script src="bower_components/kineticjs/kinetic.js"></script>
     <style type="text/css">
-    canvas{
-border: 1px solid green !important;
+    canvas {
+        border: 1px solid green !important;
     }
     </style>
 </head>
@@ -23,14 +23,37 @@ border: 1px solid green !important;
 
     var layer = new Kinetic.Layer();
 
-    var pie = new Kinetic.Circle({
-        x: 150,
-        y: 150,
-        radius: 40,
-        fill: 'pink'
-    });
+    var percent = [10, 20, 10, 10, 30, 20];
 
-    layer.add(pie);
+    for (var i = 0; i < percent.length; i += 1) {
+        if (i === 0) {
+            layer.add(pieArc(0, percent[i] / 50));
+        } else {
+            layer.add(pieArc(percent[i - 1] / 50, percent[i] / 50));
+        }
+    }
+
+    function pieArc(startPercent, endPercent) {
+        var pieArc = new Kinetic.Shape({
+            fill: '#00D2FF',
+            stroke: 'black',
+            strokeWidth: 3,
+            drawFunc: function(context) {
+                var x = stage.getWidth() / 2;
+                var y = stage.getHeight() / 2;
+                var radius = 150;
+                var startAngle = startPercent * Math.PI;
+                var endAngle = endPercent * Math.PI;
+                context.beginPath();
+                context.moveTo(x, y);
+                context.arc(x, y, radius, startAngle, endAngle, false);
+                context.closePath();
+                context.fillStrokeShape(this);
+            }
+        });
+        return pieArc;
+    }
+
     stage.add(layer);
     </script>
 </body>
