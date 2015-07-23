@@ -13,3 +13,6 @@ Team members
 
 PROJECT 
 Statistics application – app showing different charts, based on received data
+
+GIT
+https://github.com/dchakov/JSUIandDOMOnlineTeamPear
