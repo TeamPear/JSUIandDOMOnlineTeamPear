@@ -1,4 +1,5 @@
 # JSUIandDOMOnlineTeamPear
+Team Name Pear
 
 Team members
 
@@ -8,3 +9,7 @@ Team members
 4.Nikolay Nachev
 5.Dimitar Chakov
 6.Miroslav Nikolov
+
+
+PROJECT 
+Statistics application – app showing different charts, based on received data
