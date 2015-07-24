@@ -1,10 +1,69 @@
 <!DOCTYPE html>
 <html>
+
 <head lang="en">
     <meta charset="UTF-8">
     <title>Team Pear</title>
+    <script src="bower_components/kineticjs/kinetic.js"></script>
+    <style type="text/css">
+    canvas {
+        border: 1px solid green !important;
+    }
+    </style>
 </head>
-<body>
 
+<body>
+    <div id="kinetic-container"></div>
+    <script type="text/javascript">
+    var stage = new Kinetic.Stage({
+        container: 'kinetic-container',
+        width: 800,
+        height: 500
+    });
+
+    var layer = new Kinetic.Layer();
+
+    var percent = [10, 10, 20, 10, 30, 20];
+    var currentPercent = 0;
+    var newFont = 'green';
+
+    for (var i = 0; i < percent.length; i += 1) {
+        if (i === 0) {
+            layer.add(pieArc(0, percent[i] / 50, 'pink'));
+        } else {
+            if (i % 2) {
+                newFont = 'blue';
+            } else {
+                newFont = 'green';
+            }
+            layer.add(pieArc(currentPercent, (currentPercent + (percent[i] / 50)), newFont));
+        }
+        currentPercent += percent[i] / 50;
+    }
+
+    function pieArc(startPercent, endPercent, font) {
+        var pieArc = new Kinetic.Shape({
+            fill: font,
+            stroke: 'white',
+            strokeWidth: 3,
+            drawFunc: function(context) {
+                var x = stage.getWidth() / 2;
+                var y = stage.getHeight() / 2;
+                var radius = 150;
+                var startAngle = startPercent * Math.PI;
+                var endAngle = endPercent * Math.PI;
+                context.beginPath();
+                context.moveTo(x, y);
+                context.arc(x, y, radius, startAngle, endAngle, false);
+                //context.closePath();
+                context.fillStrokeShape(this);
+            }
+        });
+        return pieArc;
+    }
+
+    stage.add(layer);
+    </script>
 </body>
+
 </html>
