@@ -114,7 +114,7 @@ window.Chart = (function(){
 							for(var j = 0; j < this.series[i].values.length; j++){
 
 								//The size of the current bar is it's ratio to to greatest value;
-								//transformed into pixels by multiplying to the chart inner width 
+								//transformed into pixels by multiplying to the longest bar width 
 								var ratioToMaxValue = this.series[i].values[j] / maxValue,
 									currentBarSize =  ratioToMaxValue * maxValueBarSize;
 									var bar = new Kinetic.Rect({
@@ -168,7 +168,8 @@ window.Chart = (function(){
 							for(var j = 0; j < this.series[i].values.length; j++){
 
 								//The size of the current bar is it's ratio to to greatest value;
-								//transformed into pixels by multiplying to the chart inner width
+								//transformed into pixels by multiplying to the highest bar
+								//The height of the bar is multiplied by -1 in order to draw it to the top of the chart
 								var ratioToMaxValue = this.series[i].values[j] / maxValue,
 									currentBarSize = -1 * ratioToMaxValue * maxValueBarSize;
 									var bar = new Kinetic.Rect({
