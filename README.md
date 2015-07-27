@@ -3,16 +3,16 @@ Team Name Pear
 
 Team members
 
-1.Milena Drenska
-2.Petar Zubev
-3.Ivan Tilev
-4.Nikolay Nachev
-5.Dimitar Chakov
-6.Miroslav Nikolov
+1.Milena Drenska <br/>
+2.Petar Zubev <br/>
+3.Ivan Tilev <br/>
+4.Nikolay Nachev <br/>
+5.Dimitar Chakov <br/>
+6.Miroslav Nikolov <br/>
 
 
-PROJECT 
+PROJECT <br/>
 Statistics application – app showing different charts, based on received data
 
-GIT
-https://github.com/dchakov/JSUIandDOMOnlineTeamPear
+GIT <br/>
+https://github.com/TeamPear/JSUIandDOMOnlineTeamPear

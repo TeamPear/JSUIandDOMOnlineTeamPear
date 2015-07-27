@@ -9,6 +9,7 @@
 <button data-chart-type="bar">Bar Chart</button>
 <button data-chart-type="column">Column Chart</button>
 <button data-chart-type="line">Line Chart</button>
+<button data-chart-type="pie">Pie Chart</button>
 
 <div id="chart-container"  style="width:600px; margin:0 auto;">
 </div>
@@ -71,6 +72,9 @@ buttonsArray.forEach(function(element){
 				break;
 			case 'line':
 				Chart.line.init('chart-container', options);
+				break;
+			case 'pie':
+				Chart.pie.init('chart-container', options);
 				break;
 			default:
 				alert('Choose a valid chart type');
