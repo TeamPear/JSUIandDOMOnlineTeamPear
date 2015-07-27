@@ -36,6 +36,7 @@ window.Chart = (function() {
                     }
 
                     this.axisLayer = new Kinetic.Layer();
+                    this.toolTipLayer  = new Kinetic.Layer();
                     this.stage = new Kinetic.Stage({
                         container: elementId,
                         width: options.width,
@@ -84,6 +85,202 @@ window.Chart = (function() {
         return chart;
     }());
 
+chart.shapes =(function(){
+		var shape,
+			rectangularShape,
+			bar,
+			column,
+			circle;
+		shape = {};
+		
+		Object.defineProperties(shape, {
+			drawTooltipOnHover: {
+				value: function(layer, stage){
+					var background,
+						self = this;
+				
+					this.element.on('mouseover', function(e){
+						var shapeXSize = 0,
+							shapeYSize = 0;
+						
+						//Set tooltip display coordinates relative to the bar size...
+						if(e.target.getWidth() != undefined && e.target.getHeight() != undefined){
+							shapeXSize = e.target.getWidth() / 2;
+							shapeYSize = e.target.getHeight() / 2;
+						}
+
+						text = new Kinetic.Text({
+							x: e.target.getX() + shapeXSize,
+							y: e.target.getY() + shapeYSize,
+							fill: 'black',
+							text: self.tooltip
+						});
+
+						background = new Kinetic.Rect({
+							x: e.target.getX() + shapeXSize,
+							y: e.target.getY() + shapeYSize,
+							width: text.getWidth(),
+							height: text.getHeight(),
+							stroke: '#ccc',
+							strokeWidth: 1,
+							fill: 'white'
+						});
+						
+						layer.add(background);
+						layer.add(text);
+						stage.add(layer);
+					});
+
+					this.element.on('mouseout', function(){
+						layer.removeChildren();
+						stage.add(layer);
+					});
+				}
+			}
+		});
+		
+		rectangularShape = Object.create(shape);
+		Object.defineProperties(rectangularShape,{
+			init:{
+				value:function(x, y, width, height, color, tooltip){
+					this.tooltip = tooltip;
+					this.element = new Kinetic.Rect({
+						x: x,
+						y: y,
+						width: width,
+						height: height,
+						fill:color
+					});
+					return this;
+				}
+			},
+			draw: {
+				value: function(){
+					throw new Error('drow method not implemented');
+				}
+			}
+		});
+		
+		bar = Object.create(rectangularShape);
+		Object.defineProperties(bar, {
+			draw: {
+				value:function(layer, stage){
+					var ANIMATION_SPEED = 0.08,
+						animationStart = 0,
+						animationStep = (Math.abs(this.element.getWidth()) / this.element.getWidth()) * Math.abs(this.element.getWidth()) * ANIMATION_SPEED,
+						targetBarWidth = Math.abs(this.element.getWidth()),
+						self = this,
+						animation;
+						
+					//sets height to 0 and starts animation until the initial height is reached again
+					this.element.setWidth(animationStart);
+					animation = new Kinetic.Animation(function(frame){
+						var currentElementWidth = Math.abs(self.element.getWidth());
+							
+						if(currentElementWidth > targetBarWidth){
+							animation.stop();
+						}
+						self.element.setWidth(animationStart);
+						animationStart += animationStep;
+					}, layer);
+					
+					layer.add(this.element);
+					stage.add(layer);
+					animation.start();
+				}
+			},
+			getBar: {
+				value: function(x, y, width, height, color, tooltip){
+					return Object.create(bar).init(x, y, width, height, color, tooltip);
+				}
+			}
+		});
+		
+		column = Object.create(rectangularShape);
+		Object.defineProperties(column, {
+			draw: {
+				value:function(layer, stage){
+					var ANIMATION_SPEED = 0.08,
+						animationStart = 0,
+						animationStep = (Math.abs(this.element.getHeight()) / this.element.getHeight()) * Math.abs(this.element.getHeight()) * ANIMATION_SPEED,
+						targetBarHeight = Math.abs(this.element.getHeight()),
+						self = this,
+						animation;
+						
+					this.element.setHeight(animationStart);
+					animation = new Kinetic.Animation(function(frame){
+						var currentElementHeight = Math.abs(self.element.getHeight());
+						if(currentElementHeight >= targetBarHeight){
+							animation.stop();
+						}
+						self.element.setHeight(animationStart);
+						animationStart += animationStep;
+					}, layer);
+					
+					layer.add(this.element);
+					stage.add(layer);
+					animation.start();
+				}
+			},
+			getColumn: {
+				value: function(x, y, width, height, color, tooltip){
+					return Object.create(column).init(x, y, width, height, color, tooltip);
+				}
+			}
+		});
+		
+		circle = Object.create(shape);
+		Object.defineProperties(circle, {
+			init: {
+				value: function(x, y, radius, color, tooltip){
+					this.element = new Kinetic.Circle({
+						x: x,
+						y: y,
+						radius: radius,
+						fill: color
+					});
+					this.tooltip = tooltip;
+					return this;
+				}
+			},
+			draw: {
+				value: function(layer, stage){
+					var ANIMATION_SPEED = 0.02,
+						animationStart = 0,
+						targetRadius = this.element.getRadius(),
+						animationStep = targetRadius * ANIMATION_SPEED,
+						animation,
+						self = this;
+						
+					this.element.setRadius(animationStart);
+					animation =  new Kinetic.Animation(function(frame){
+						if(self.element.getRadius() >= targetRadius){
+							animation.stop();
+						}
+						animationStart += animationStep;
+						self.element.setRadius(animationStart);
+					}, layer);
+					
+					layer.add(this.element);
+					stage.add(layer);
+					animation.start();
+				}
+			},
+			getCircle: {
+				value: function(x, y, radius, color, tooltip){
+					return Object.create(circle).init(x, y, radius, color, tooltip);
+				}
+			}
+		});
+		
+		return {
+			getBar: bar.getBar,
+			getColumn: column.getColumn,
+			getCircle: circle.getCircle
+		}
+		
+	}());
+
     barChart = (function(parent) {
         var barChart = Object.create(parent);
 
@@ -98,41 +295,37 @@ window.Chart = (function() {
                 }
             },
             drawShapes: {
-                value: function() {
-                    var maxValue = this.findGreatestAbsoluteValueIn(this.series),
-                        ratioToChartScale = maxValue / this.scale.valuesRange.absDifference,
-                        maxValueBarSize = ratioToChartScale * this.scale.innerWidth,
-                        barMargin = (this.scale.categoryWidth * 0.3) / (this.series.length + 1),
-                        barWidth = (0.5 * this.scale.categoryWidth) / this.series.length;
+				value: function(){
+					var maxValue =  this.findGreatestAbsoluteValueIn(this.series),
+						ratioToChartScale = maxValue / this.scale.valuesRange.absDifference,
+						maxValueBarSize = ratioToChartScale * this.scale.innerWidth ,
+						barMargin = (this.scale.categoryWidth * 0.3) / (this.series.length + 1),
+						barWidth = (0.5 * this.scale.categoryWidth) / this.series.length;
+						
+						//draw bars
+						for(var i = 0; i < this.series.length; i++){
+							//For each serie adds  to the first bar position top margin and the size of the previous bars
+							var barY = this.scale.topLeftY + i * barWidth + (i + 1) * barMargin ,
+								color = this.series[i].color,
+								layer = new Kinetic.Layer();
+								
+								
+							for(var j = 0; j < this.series[i].values.length; j++){
 
-                    //draw bars
-                    for (var i = 0; i < this.series.length; i++) {
-                        //For each serie adds  to the first bar position top margin and the size of the previous bars
-                        var barY = this.scale.topLeftY + i * barWidth + (i + 1) * barMargin,
-                            color = this.series[i].color,
-                            layer = new Kinetic.Layer();
-
-                        for (var j = 0; j < this.series[i].values.length; j++) {
-
-                            //The size of the current bar is it's ratio to to greatest value;
-                            //transformed into pixels by multiplying to the chart inner width 
-                            var ratioToMaxValue = this.series[i].values[j] / maxValue,
-                                currentBarSize = ratioToMaxValue * maxValueBarSize;
-                            var bar = new Kinetic.Rect({
-                                x: this.scale.zeroValuePoint,
-                                y: barY,
-                                width: currentBarSize,
-                                height: barWidth,
-                                fill: color
-                            });
-
-                            barY += this.scale.categoryWidth;
-                            layer.add(bar);
-                        }
-                        this.stage.add(layer);
-                    }
-                }
-            }
+								//The size of the current bar is it's ratio to to greatest value;
+								//transformed into pixels by multiplying to the chart inner width 
+								var ratioToMaxValue = this.series[i].values[j] / maxValue,
+									currentBarSize =  ratioToMaxValue * maxValueBarSize,
+									tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,									
+									bar = chart.shapes.getBar(this.scale.zeroValuePoint,barY, currentBarSize, barWidth, color, tooltip); //TO REMOVE
+									
+								bar.draw(layer, this.stage);
+								bar.drawTooltipOnHover(this.toolTipLayer, this.stage);
+								barY += this.scale.categoryWidth;
+							}
+						}
+					}
+				}
         });
         return barChart;
     }(chart));
@@ -151,42 +344,38 @@ window.Chart = (function() {
                 }
             },
             drawShapes: {
-                value: function() {
-                    var maxValue = this.findGreatestAbsoluteValueIn(this.series),
-                        ratioToChartScale = maxValue / this.scale.valuesRange.absDifference,
-                        maxValueBarSize = ratioToChartScale * this.scale.innerHeight,
-                        barMargin = (this.scale.categoryWidth * 0.3) / (this.series.length + 1),
-                        barWidth = (0.5 * this.scale.categoryWidth) / this.series.length;
+				value: function(){
+					var maxValue =  this.findGreatestAbsoluteValueIn(this.series),
+						ratioToChartScale = maxValue / this.scale.valuesRange.absDifference,
+						maxValueBarSize = ratioToChartScale * this.scale.innerHeight ,
+						barMargin = (this.scale.categoryWidth * 0.3) / (this.series.length + 1),
+						barWidth = (0.5 * this.scale.categoryWidth) / this.series.length;
+						
+						//draw bars
+						for(var i = 0; i < this.series.length; i++){
 
-                    //draw bars
-                    for (var i = 0; i < this.series.length; i++) {
+							//For each serie adds  to the first bar margin to the left and the size of the previous bars
+							var barX = this.scale.maxYLabelWidth + (i * barWidth + (i + 1) * barMargin),
+								color = this.series[i].color,
+								layer = new Kinetic.Layer();
+								
+							for(var j = 0; j < this.series[i].values.length; j++){
 
-                        //For each serie adds  to the first bar margin to the left and the size of the previous bars
-                        var barX = this.scale.maxYLabelWidth + (i * barWidth + (i + 1) * barMargin),
-                            color = this.series[i].color,
-                            layer = new Kinetic.Layer();
+								//The size of the current bar is it's ratio to to greatest value;
+								//transformed into pixels by multiplying to the chart inner width
+								var ratioToMaxValue = this.series[i].values[j] / maxValue,
+									currentBarSize = -1 * ratioToMaxValue * maxValueBarSize,
+									tooltip = tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
+									bar = chart.shapes.getColumn(barX, this.scale.zeroValuePoint, barWidth, currentBarSize, color, tooltip );
 
-                        for (var j = 0; j < this.series[i].values.length; j++) {
+								bar.draw(layer, this.stage);
+								bar.drawTooltipOnHover(this.toolTipLayer, this.stage);
+								barX += this.scale.categoryWidth;
 
-                            //The size of the current bar is it's ratio to to greatest value;
-                            //transformed into pixels by multiplying to the chart inner width
-                            var ratioToMaxValue = this.series[i].values[j] / maxValue,
-                                currentBarSize = -1 * ratioToMaxValue * maxValueBarSize;
-                            var bar = new Kinetic.Rect({
-                                x: barX,
-                                y: this.scale.zeroValuePoint,
-                                width: barWidth,
-                                height: currentBarSize,
-                                fill: color
-                            });
-
-                            barX += this.scale.categoryWidth;
-                            layer.add(bar);
-                        }
-                        this.stage.add(layer);
-                    }
-                }
-            }
+							}
+						}
+					}
+				}
         });
         return columnChart;
     }(chart));
@@ -205,45 +394,44 @@ window.Chart = (function() {
                 }
             },
             drawShapes: {
-                value: function() {
-                    var barMargin = (this.scale.categoryWidth * 0.5);
+				value: function(){
+					var barMargin = (this.scale.categoryWidth * 0.5),
+						POINT_RADIUS = 4;
+						
+						//draw lines
+						for(var i = 0; i < this.series.length; i++){
+							var lineStartingX = barMargin,
+								color = this.series[i].color,
+								currentSeriePoints = [],
+								layer = new Kinetic.Layer(),
+								line;
 
-                    //draw lines
-                    for (var i = 0; i < this.series.length; i++) {
-                        var lineStartingX = barMargin,
-                            color = this.series[i].color,
-                            currentSeriePoints = [],
-                            layer = new Kinetic.Layer(),
-                            line;
+							for(var j = 0; j < this.series[i].values.length; j++){
+								var ratioToChartScale = Math.abs(this.scale.valuesRange.max - this.series[i].values[j]) / this.scale.valuesRange.absDifference,
+									lineStartingY = this.scale.topLeftY + (ratioToChartScale * this.scale.innerHeight),
+									tooltip = tooltip = tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
+									circle;
 
-                        for (var j = 0; j < this.series[i].values.length; j++) {
-                            var ratioToChartScale = Math.abs(this.scale.valuesRange.max - this.series[i].values[j]) / this.scale.valuesRange.absDifference,
-                                lineStartingY = this.scale.topLeftY + (ratioToChartScale * this.scale.innerHeight),
-                                circle;
+								currentSeriePoints.push(lineStartingX);
+								currentSeriePoints.push(lineStartingY);
+								
+								circle = chart.shapes.getCircle(lineStartingX, lineStartingY, POINT_RADIUS, this.series[i].color, tooltip);
+								circle.draw(layer, this.stage);
+								circle.drawTooltipOnHover(this.toolTipLayer, this.stage);
+								lineStartingX += this.scale.categoryWidth;
+							}
 
-                            currentSeriePoints.push(lineStartingX);
-                            currentSeriePoints.push(lineStartingY);
-                            circle = new Kinetic.Circle({
-                                x: lineStartingX,
-                                y: lineStartingY,
-                                radius: 4,
-                                fill: this.series[i].color
-                            });
-                            layer.add(circle);
-                            lineStartingX += this.scale.categoryWidth;
-                        }
-
-                        line = new Kinetic.Line({
-                            points: currentSeriePoints,
-                            stroke: this.series[i].color,
-                            strokeWidth: 2,
-                            lineJoin: 'round'
-                        });
-                        layer.add(line);
-                        this.stage.add(layer);
-                    }
-                }
-            }
+							line = new Kinetic.Line({
+								points: currentSeriePoints,
+								stroke: this.series[i].color,
+								strokeWidth: 2,
+								lineJoin: 'round'
+							});
+							layer.add(line);
+							this.stage.add(layer);
+						}
+					}
+				}
         });
         return lineChart;
     }(chart));
