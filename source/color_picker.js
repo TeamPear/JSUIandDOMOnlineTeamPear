@@ -141,7 +141,95 @@ var colorPicker = (function (){
 
             this.selectorAngle = 0;
 
+            this._ringSelectorDrag = false;
+            this._colorSelectorDrag = false;
+
+            this._ring.addEventListener( 'mousedown', function (ev) {
+                if ( !colorPicker._colorSelectorDrag ) {
+                    colorPicker._ringSelectorDrag = true;
+                }
+            }, false );
             this._ring.addEventListener( 'mousemove', function (ev) {
+                if ( ( ev.buttons === 1 ) && ( !colorPicker._colorSelectorDrag ) ) {
+                    colorPicker._ringSelectorDrag = true;
+                } else {
+                    colorPicker._ringSelectorDrag = false;
+                }
+            }, false );
+
+            this._ringSelector.addEventListener( 'mousedown', function (ev) {
+                if ( !colorPicker._colorSelectorDrag ) {
+                    colorPicker._ringSelectorDrag = true;
+                }
+            }, false );
+            this._ringSelector.addEventListener( 'mousemove', function (ev) {
+                if ( ( ev.buttons === 1 ) && ( !colorPicker._colorSelectorDrag ) ) {
+                    colorPicker._ringSelectorDrag = true;
+                } else {
+                    colorPicker._ringSelectorDrag = false;
+                }
+            }, false );
+
+            this._colorSelectorTriangle.addEventListener( 'mousedown', function (ev) {
+                if ( !colorPicker._ringSelectorDrag ) {
+                    colorPicker._colorSelectorDrag = true;
+                }
+            }, false );
+            this._colorSelectorTriangle.addEventListener( 'mousemove', function (ev) {
+                if ( ( ev.buttons === 1 ) && ( !colorPicker._ringSelectorDrag ) ) {
+                    colorPicker._colorSelectorDrag = true;
+                } else {
+                    colorPicker._colorSelectorDrag = false;
+                }
+            }, false );
+
+            this._colorSelector.addEventListener( 'mousedown', function (ev) {
+                if ( !colorPicker._ringSelectorDrag ) {
+                    colorPicker._colorSelectorDrag = true;
+                }
+            }, false );
+            this._colorSelector.addEventListener( 'mousemove', function (ev) {
+                if ( ( ev.buttons === 1 ) && ( !colorPicker._ringSelectorDrag ) ) {
+                    colorPicker._colorSelectorDrag = true;
+                } else {
+                    colorPicker._colorSelectorDrag = false;
+                }
+            }, false );
+
+            this._stage.addEventListener( 'mouseup', function (ev) {
+                colorPicker._ringSelectorDrag = false;
+                colorPicker._colorSelectorDrag = false;
+            }, false );
+
+            this._stage.addEventListener( 'mouseout', function (ev) {
+                if ( ev.buttons && 1 === 0 ) {
+                    colorPicker._ringSelectorDrag = false;
+                    colorPicker._colorSelectorDrag = false;
+                }
+            }, false );
+
+            this._stage.addEventListener( 'mousemove', function (ev) {
+                if ( colorPicker._ringSelectorDrag ) {
+                    colorPicker.selectorAngle = - Math.atan2( colorPicker._center.x - ev.clientX + colorPicker._container.offsetLeft, colorPicker._center.y - ev.clientY + colorPicker._container.offsetTop ) - Math.PI / 2;
+                }
+                if (colorPicker._colorSelectorDrag ) {
+                    var
+                        dx, dy, dist, angle;
+                    dx = ev.clientX - colorPicker._container.offsetLeft - colorPicker._center.x;
+                    dy = ev.clientY - colorPicker._container.offsetTop - colorPicker._center.y;
+                    dist = Math.pow(dx * dx + dy * dy, 0.5);
+                    angle = Math.atan2(dx, dy) - Math.PI / 2;
+
+                    dx = Math.round(Math.cos(angle + colorPicker.selectorAngle) * dist);
+                    dy = Math.round(Math.sin(angle + colorPicker.selectorAngle) * dist);
+                    colorPicker._colorSelector.setAttr('offset', {x: -dx, y: dy});
+                    colorPicker._selectorLayer.draw();
+                    colorPicker.selectorAngle = colorPicker.selectorAngle;
+                }
+            }, false );
+
+
+/*            this._ring.addEventListener( 'mousemove', function (ev) {
                 if (ev.buttons===1) {
                     colorPicker.selectorAngle = - Math.atan2( colorPicker._center.x - ev.clientX + colorPicker._container.offsetLeft, colorPicker._center.y - ev.clientY + colorPicker._container.offsetTop ) - Math.PI / 2;
                 }
@@ -167,7 +255,7 @@ var colorPicker = (function (){
                     colorPicker.selectorAngle = colorPicker.selectorAngle;
                  //   colorPicker._drawTriangle();
                 }
-            }, false );
+            }, false );  */
             return this;
         }
     });
@@ -262,14 +350,25 @@ var colorPicker = (function (){
                     b = 255;
                 }
 
-                for ( w=0; w < this._width; w +=1 ) {
-                    x = Math.round(this._radius - 1 + Math.cos(angle) * (this._radius - this._width + w + 1));
-                    y = Math.round(this._radius - 1 + Math.sin(angle) * (this._radius - this._width + w + 1));
+                for ( w=-1; w < this._width + 2; w +=1 ) {
+                    x = Math.round(this._radius - 1 + Math.cos(angle) * (this._radius - this._width + w ));
+                    if (x < 0) {
+                        x = 0
+                    };
+                    if (x > this._radius * 2 - 1) {
+                        x = this._radius * 2 - 1
+                    };
+                    y = Math.round(this._radius - 1 + Math.sin(angle) * (this._radius - this._width + w ));
+                    if (y < 0) {
+                        y = 0
+                    };
+                    if (y > this._radius * 2 - 1) {
+                        y = this._radius * 2 - 1
+                    };
                     this._imagedata.data[( ( y * this._radius * 2) + x ) * 4] = r;
                     this._imagedata.data[( ( y * this._radius * 2) + x ) * 4 + 1] = g;
                     this._imagedata.data[( ( y * this._radius * 2) + x ) * 4 + 2] = b;
                 }
-
             }
             this._ctx.putImageData( this._imagedata, this._center.x - this._radius, this._center.y - this._radius  );
         }
