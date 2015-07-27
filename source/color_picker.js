@@ -51,6 +51,61 @@ var colorPicker = (function (){
         } : null;
     }
 
+    function intersection( p1, p2, p3, p4 ) {
+        return {
+            x: ( ( p1.x * p2.y - p1.y * p2.x ) * ( p3.x - p4.x ) - ( p1.x - p2.x ) * ( p3.x * p4.y - p3.y * p4.x ) ) /
+               ( ( p1.x - p2.x ) * ( p3.y - p4.y ) - ( p1.y - p2.y ) * ( p3.x - p4.x ) ),
+            y: ( ( p1.x * p2.y - p1.y * p2.x ) * ( p3.y - p4.y ) - ( p1.y - p2.y ) * ( p3.x * p4.y - p3.y * p4.x ) ) /
+               ( ( p1.x - p2.x ) * ( p3.y - p4.y ) - ( p1.y - p2.y ) * ( p3.x - p4.x ) )
+        }
+    };
+
+    function between ( point, point1, point2 ) {
+        var
+            minX = Math.min(point1.x, point2.x),
+            maxX = Math.max(point1.x, point2.x),
+            minY = Math.min(point1.y, point2.y),
+            maxY = Math.max(point1.y, point2.y),
+            result = (point.x >= minX ) && (point.x <= maxX) && (point.y >= minY) && (point.y <= maxY);
+        return result;
+    }
+
+    function getBounds( points ) {
+        var
+            interSection = [];
+        interSection[0] = intersection( {x: points[0] ,y: points[1] }, {x: points[2] ,y: points[3]},
+                                        {x: 0 ,y: 0 }                , {x: points[6] ,y: points[7] } );
+        interSection[1] = intersection( {x: points[2] ,y: points[3] }, {x: points[4] ,y: points[5]},
+                                        {x: 0 ,y: 0 }                , {x: points[6] ,y: points[7] } );
+        interSection[2] = intersection( {x: points[4] ,y: points[5] }, {x: points[0] ,y: points[1]},
+                                        {x: 0 ,y: 0 }                , {x: points[6] ,y: points[7] } );
+        interSection = interSection.filter( function ( point, index ) {
+            var
+                index1 = index + 1;
+            if ( index1 === 3 ) {
+                index1 = 0;
+            };
+            return point.x !== NaN && point.x !== 'infinity' && point.y !== NaN && point.y !== 'infinity' &&
+                between( point, {x: points[2*index], y: points[2*index+1]}, {x: points[2*index1], y: points[2*index1+1]});
+        });
+
+        if ( interSection.length === 3 ) {
+            interSection = interSection.sort( function (p1, p2) {
+                return p1.x - p2.x;
+            })
+            if ( interSection[0].x === interSection[1].x ) {
+                interSection.shift();
+            } else {
+                interSection.pop();
+            }
+        }
+        return interSection;
+    };
+
+    function distance( point1, point2) {
+        return Math.pow( ( point1.x - point2.x ) * ( point1.x - point2.x ) + ( point1.y - point2.y ) * ( point1.y - point2.y ), 0.5 );
+    };
+
     Object.defineProperty( colorPicker, 'init', {
         value: function (container) {
             this._center = { x: 104, y: 104 };
@@ -156,6 +211,9 @@ var colorPicker = (function (){
                     colorPicker._ringSelectorDrag = false;
                 }
             }, false );
+            this._ring.addEventListener( 'click', function (ev) {
+                colorPicker.selectorAngle = - Math.atan2( colorPicker._center.x - ev.clientX + colorPicker._container.offsetLeft, colorPicker._center.y - ev.clientY + colorPicker._container.offsetTop ) - Math.PI / 2;
+            }, false );
 
             this._ringSelector.addEventListener( 'mousedown', function (ev) {
                 if ( !colorPicker._colorSelectorDrag ) {
@@ -181,6 +239,21 @@ var colorPicker = (function (){
                 } else {
                     colorPicker._colorSelectorDrag = false;
                 }
+            }, false );
+            this._colorSelectorTriangle.addEventListener( 'click', function (ev) {
+                var
+                    dx, dy, dist, angle,
+                dx = - colorPicker._center.x + ev.clientX - colorPicker._container.offsetLeft;
+                dy = - colorPicker._center.y + ev.clientY - colorPicker._container.offsetTop;
+                dist = Math.pow(dx * dx + dy * dy, 0.5);
+                angle = Math.atan2(dx, dy) - Math.PI / 2;
+
+                dx = Math.round(Math.cos(angle + colorPicker.selectorAngle) * dist);
+                dy = Math.round(Math.sin(angle + colorPicker.selectorAngle) * dist);
+                colorPicker._colorSelector.setAttr('offset', {x: -dx, y: dy});
+                colorPicker._selectorLayer.draw();
+                colorPicker.selectorAngle = colorPicker.selectorAngle;
+
             }, false );
 
             this._colorSelector.addEventListener( 'mousedown', function (ev) {
@@ -214,9 +287,33 @@ var colorPicker = (function (){
                 }
                 if (colorPicker._colorSelectorDrag ) {
                     var
-                        dx, dy, dist, angle;
-                    dx = ev.clientX - colorPicker._container.offsetLeft - colorPicker._center.x;
-                    dy = ev.clientY - colorPicker._container.offsetTop - colorPicker._center.y;
+                        dx, dy, dist, angle,
+                        i, bounds,
+                        points = colorPicker._colorSelectorTriangle.getAttr('points').slice();
+
+                    for (i=0; i<3; i += 1) {
+                        dist = Math.pow( points[i*2] * points[i*2] + points[i*2+1] * points[i*2+1], 0.5);
+                        angle = Math.atan2( points[i*2], points[i*2+1] ) - Math.PI / 2;
+                        points[i*2] = Math.round( Math.cos( angle - colorPicker.selectorAngle ) * dist );
+                        points[i*2+1] = Math.round( Math.sin( angle - colorPicker.selectorAngle ) * dist );
+                    }
+
+                    points[6] = - colorPicker._center.x + ev.clientX - colorPicker._container.offsetLeft;
+                    points[7] = + colorPicker._center.y - ev.clientY + colorPicker._container.offsetTop;
+
+                    bounds = getBounds( points );
+
+                    if (between( {x:points[6], y: points[7]}, bounds[0], bounds[1])) {
+                        dx = points[6];
+                        dy = -points[7];
+                    } else if (distance( {x:points[6], y: points[7]}, bounds[0] ) < distance( {x:points[6], y: points[7]}, bounds[1]) ) {
+                        dx = bounds[0].x;
+                        dy = -bounds[0].y;
+                    } else {
+                        dx = bounds[1].x;
+                        dy = -bounds[1].y;
+                    }
+
                     dist = Math.pow(dx * dx + dy * dy, 0.5);
                     angle = Math.atan2(dx, dy) - Math.PI / 2;
 
@@ -228,34 +325,6 @@ var colorPicker = (function (){
                 }
             }, false );
 
-
-/*            this._ring.addEventListener( 'mousemove', function (ev) {
-                if (ev.buttons===1) {
-                    colorPicker.selectorAngle = - Math.atan2( colorPicker._center.x - ev.clientX + colorPicker._container.offsetLeft, colorPicker._center.y - ev.clientY + colorPicker._container.offsetTop ) - Math.PI / 2;
-                }
-            }, false );
-
-            this._ring.addEventListener( 'click', function (ev) {
-                 colorPicker.selectorAngle = - Math.atan2( colorPicker._center.x - ev.clientX + colorPicker._container.offsetLeft, colorPicker._center.y - ev.clientY + colorPicker._container.offsetTop ) - Math.PI / 2;
-            }, false );
-
-            this._colorSelectorTriangle.addEventListener( 'mousemove', function (ev) {
-                var
-                    dx, dy, dist, angle;
-                if (ev.buttons===1) {
-                    dx = ev.clientX - colorPicker._container.offsetLeft - colorPicker._center.x;
-                    dy = ev.clientY - colorPicker._container.offsetTop - colorPicker._center.y;
-                    dist = Math.pow(dx * dx + dy * dy, 0.5);
-                    angle = Math.atan2(dx, dy) - Math.PI / 2;
-
-                    dx = Math.round(Math.cos(angle + colorPicker.selectorAngle) * dist);
-                    dy = Math.round(Math.sin(angle + colorPicker.selectorAngle) * dist);
-                    colorPicker._colorSelector.setAttr('offset', {x: -dx, y: dy});
-                    colorPicker._selectorLayer.draw();
-                    colorPicker.selectorAngle = colorPicker.selectorAngle;
-                 //   colorPicker._drawTriangle();
-                }
-            }, false );  */
             return this;
         }
     });
