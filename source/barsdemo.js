@@ -102,7 +102,7 @@ chart.shapes =(function(){
 					this.element.on('mouseover', function(e){
 						var shapeXSize = 0,
 							shapeYSize = 0;
-						
+						console.log("d");
 						//Set tooltip display coordinates relative to the bar size...
 						if(e.target.getWidth() != undefined && e.target.getHeight() != undefined){
 							shapeXSize = e.target.getWidth() / 2;
