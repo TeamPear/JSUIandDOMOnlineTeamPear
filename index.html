@@ -25,18 +25,15 @@
 
     var percent = [10, 10, 20, 10, 30, 20];
     var currentPercent = 0;
-    var newFont = 'green';
+    var newFont = ['#03a9f4', '#3f51b5', '#444', '#ccc', '#666', '#888'];
 
     for (var i = 0; i < percent.length; i += 1) {
         if (i === 0) {
-            layer.add(pieArc(0, percent[i] / 50, 'pink'));
+            layer.add(pieArc(0, percent[i] / 50, newFont[i]));
+            layer.add(doughnutArc(0, percent[i] / 50, newFont[i]));
         } else {
-            if (i % 2) {
-                newFont = 'blue';
-            } else {
-                newFont = 'green';
-            }
-            layer.add(pieArc(currentPercent, (currentPercent + (percent[i] / 50)), newFont));
+            layer.add(pieArc(currentPercent, (currentPercent + (percent[i] / 50)), newFont[i]));
+            layer.add(doughnutArc(currentPercent, (currentPercent + (percent[i] / 50)), newFont[i]));
         }
         currentPercent += percent[i] / 50;
     }
@@ -47,7 +44,7 @@
             stroke: 'white',
             strokeWidth: 3,
             drawFunc: function(context) {
-                var x = stage.getWidth() / 2;
+                var x = stage.getWidth() / 2 - 150;
                 var y = stage.getHeight() / 2;
                 var radius = 150;
                 var startAngle = startPercent * Math.PI;
@@ -61,6 +58,26 @@
         });
         return pieArc;
     }
+
+    function doughnutArc(startPercent, endPercent, font) {
+        var doughnutArc = new Kinetic.Shape({
+            stroke: font,
+            strokeWidth: 100,
+            drawFunc: function(context) {
+                var x = stage.getWidth() / 2 + 150;
+                var y = stage.getHeight() / 2;
+                var radius = 100;
+                var startAngle = startPercent * Math.PI;
+                var endAngle = endPercent * Math.PI;
+                context.beginPath();
+                context.arc(x, y, radius, startAngle, endAngle, false);
+                //context.closePath();
+                context.fillStrokeShape(this);
+            }
+        });
+        return doughnutArc;
+    }
+
 
     stage.add(layer);
     </script>

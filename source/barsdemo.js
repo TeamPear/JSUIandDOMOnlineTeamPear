@@ -279,15 +279,15 @@ window.Chart = (function() {
                     }
 
                     // draw piece of pie arc
-                    function pieArc(startPercent, endPercent, color, positionX) {
+                    function pieArc(startPercent, endPercent, color, positionX, positionY, pieRadius) {
                         var pieArc = new Kinetic.Shape({
                             fill: color,
-                            stroke: 'green',
-                            strokeWidth: 3,
+                            stroke: 'white',
+                            strokeWidth: 2,
                             drawFunc: function(context) {
                                 var x = positionX;
-                                var y = this.scale.innerHeight / 2;
-                                var radius = 100;
+                                var y = positionY;
+                                var radius = pieRadius;
                                 var startAngle = startPercent * Math.PI;
                                 var endAngle = endPercent * Math.PI;
                                 context.beginPath();
@@ -303,20 +303,19 @@ window.Chart = (function() {
                     //draw pies
                     var layer = new Kinetic.Layer();
                     for (var k = 0; k < this.series[0].values.length; k += 1) {
-                        var positionX = this.scale.innerWidth + k * 100,
+                        var pieRadius = 80,
+                            positionX = 2 * k * (pieRadius + 10) + 120,
+                            positionY = this.scale.innerHeight / 2,
                             currentPercent = 0;
 
                         for (var j = 0; j < this.series.length; j += 1) {
                             var color = this.series[j].color;
-                            var endPercent = Math.round((Math.abs(this.series[j].values[k]) / pieCategory[k][this.categories[k]] * 100));
-
-                            console.log(currentPercent);
-                            console.log(endPercent / 50);
+                            var endPercent = Math.abs(this.series[j].values[k]) / pieCategory[k][this.categories[k]] * 100;
 
                             if (j === 0) {
-                                layer.add(pieArc(0, endPercent / 50, color, positionX));
+                                layer.add(pieArc(0, endPercent / 50, color, positionX, positionY, pieRadius));
                             } else {
-                                layer.add(pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX));
+                                layer.add(pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX, positionY, pieRadius));
                             }
                             currentPercent += endPercent / 50;
                         }
