@@ -21,7 +21,7 @@ window.Chart = (function() {
                     this.outerWidth = options.width;
                     this.outerHeight = options.height;
                     this.options = options;
-                    this.series = options.series;
+                    this.series = [];
                     this.categories = options.categories;
                     this.labelPadding = options.labelPadding;
                     this.fontSize = options.fontSize;
@@ -29,7 +29,6 @@ window.Chart = (function() {
                     this.guidesColor = options.guidesColor;
                     this.title = options.title;
                     this.topChartPadding = 30;
-
 
                     if (element.childNodes.length > 0) {
                         element.innerHTML = '';
@@ -45,7 +44,16 @@ window.Chart = (function() {
 
                     if (this.title != null && this.title.length > 0) {
                         this.drawTitle();
+                    }
 
+                    //parse series input into Serie objects, containing their own layer and Kinetic elements
+                    for(var i = 0; i < options.series.length; i++){
+                        var title = options.series[i].title,
+                            values = options.series[i].values,
+                            color = options.series[i].color,
+                            singleSerie = Object.create(serie).init(title, values, color, new Kinetic.Layer(), this.stage);
+                            
+                        this.series.push(singleSerie);
                     }
                 }
             },
@@ -62,6 +70,23 @@ window.Chart = (function() {
                     }
 
                     return maxAbsoluteValue;
+                }
+            },
+            updateSerieColor: {
+                value: function(index, color){
+                    var serie = this.series[index],
+                        elements = serie.layer.getChildren();
+
+                    serie.layer.removeChildren();
+                    for(var i = 0; i < elements.length; i++){
+                        elements[i].setFill(color);
+                        if(elements[i].getClassName() === 'Line'){
+                            elements[i].setStroke(color);
+                        }
+                        
+                        serie.layer.add(elements[i]);
+                    }
+                    this.stage.add(serie.layer);
                 }
             },
             drawTitle: {
@@ -295,37 +320,36 @@ window.Chart = (function() {
                 }
             },
             drawShapes: {
-                value: function() {
-                    var maxValue = this.findGreatestAbsoluteValueIn(this.series),
+                value: function(){
+                    var maxValue =  this.findGreatestAbsoluteValueIn(this.series),
                         ratioToChartScale = maxValue / this.scale.valuesRange.absDifference,
-                        maxValueBarSize = ratioToChartScale * this.scale.innerWidth,
+                        maxValueBarSize = ratioToChartScale * this.scale.innerWidth ,
                         barMargin = (this.scale.categoryWidth * 0.3) / (this.series.length + 1),
                         barWidth = (0.5 * this.scale.categoryWidth) / this.series.length;
+                        
+                        //draw bars
+                        for(var i = 0; i < this.series.length; i++){
+                            //For each serie adds  to the first bar position top margin and the size of the previous bars
+                            var barY = this.scale.topLeftY + i * barWidth + (i + 1) * barMargin ,
+                                color = this.series[i].color;
+                                
+                                
+                            for(var j = 0; j < this.series[i].values.length; j++){
 
-                    //draw bars
-                    for (var i = 0; i < this.series.length; i++) {
-                        //For each serie adds  to the first bar position top margin and the size of the previous bars
-                        var barY = this.scale.topLeftY + i * barWidth + (i + 1) * barMargin,
-                            color = this.series[i].color,
-                            layer = new Kinetic.Layer();
-
-
-                        for (var j = 0; j < this.series[i].values.length; j++) {
-
-                            //The size of the current bar is it's ratio to to greatest value;
-                            //transformed into pixels by multiplying to the chart inner width 
-                            var ratioToMaxValue = this.series[i].values[j] / maxValue,
-                                currentBarSize = ratioToMaxValue * maxValueBarSize,
-                                tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
-                                bar = chart.shapes.getBar(this.scale.zeroValuePoint, barY, currentBarSize, barWidth, color, tooltip); //TO REMOVE
-
-                            bar.draw(layer, this.stage);
-                            bar.drawTooltipOnHover(this.toolTipLayer, this.stage);
-                            barY += this.scale.categoryWidth;
+                                //The size of the current bar is it's ratio to to greatest value;
+                                //transformed into pixels by multiplying to the chart inner width 
+                                var ratioToMaxValue = this.series[i].values[j] / maxValue,
+                                    currentBarSize =  ratioToMaxValue * maxValueBarSize,
+                                    tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,                                 
+                                    bar = chart.shapes.getBar(this.scale.zeroValuePoint,barY, currentBarSize, barWidth, color, tooltip); //TO REMOVE
+                                    
+                                bar.draw(this.series[i].layer, this.stage);
+                                bar.drawTooltipOnHover(this.toolTipLayer, this.stage);
+                                barY += this.scale.categoryWidth;
+                            }
                         }
                     }
                 }
-            }
         });
         return barChart;
     }(chart));
@@ -344,38 +368,37 @@ window.Chart = (function() {
                 }
             },
             drawShapes: {
-                value: function() {
-                    var maxValue = this.findGreatestAbsoluteValueIn(this.series),
+                value: function(){
+                    var maxValue =  this.findGreatestAbsoluteValueIn(this.series),
                         ratioToChartScale = maxValue / this.scale.valuesRange.absDifference,
-                        maxValueBarSize = ratioToChartScale * this.scale.innerHeight,
-                        barMargin = (this.scale.categoryWidth * 0.3) / (this.series.length + 1),
-                        barWidth = (0.5 * this.scale.categoryWidth) / this.series.length;
+                        maxValuecolumnSize = ratioToChartScale * this.scale.innerHeight ,
+                        columnMargin = (this.scale.categoryWidth * 0.3) / (this.series.length + 1),
+                        columnWidth = (0.5 * this.scale.categoryWidth) / this.series.length;
+                        
+                        //draw bars
+                        for(var i = 0; i < this.series.length; i++){
 
-                    //draw bars
-                    for (var i = 0; i < this.series.length; i++) {
+                            //For each serie adds  to the first column margin to the left and the size of the previous columns
+                            var columnX = this.scale.maxYLabelWidth + (i * columnWidth + (i + 1) * columnMargin),
+                                color = this.series[i].color;
+                                
+                            for(var j = 0; j < this.series[i].values.length; j++){
 
-                        //For each serie adds  to the first bar margin to the left and the size of the previous bars
-                        var barX = this.scale.maxYLabelWidth + (i * barWidth + (i + 1) * barMargin),
-                            color = this.series[i].color,
-                            layer = new Kinetic.Layer();
+                                //The size of the current column is it's ratio to to greatest value;
+                                //transformed into pixels by multiplying to the chart inner width
+                                var ratioToMaxValue = this.series[i].values[j] / maxValue,
+                                    currentcolumnSize = -1 * ratioToMaxValue * maxValuecolumnSize,
+                                    tooltip = tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
+                                    column = chart.shapes.getColumn(columnX, this.scale.zeroValuePoint, columnWidth, currentcolumnSize, color, tooltip );
 
-                        for (var j = 0; j < this.series[i].values.length; j++) {
+                                column.draw(this.series[i].layer, this.stage);
+                                column.drawTooltipOnHover(this.toolTipLayer, this.stage);
+                                columnX += this.scale.categoryWidth;
 
-                            //The size of the current bar is it's ratio to to greatest value;
-                            //transformed into pixels by multiplying to the chart inner width
-                            var ratioToMaxValue = this.series[i].values[j] / maxValue,
-                                currentBarSize = -1 * ratioToMaxValue * maxValueBarSize,
-                                tooltip = tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
-                                bar = chart.shapes.getColumn(barX, this.scale.zeroValuePoint, barWidth, currentBarSize, color, tooltip);
-
-                            bar.draw(layer, this.stage);
-                            bar.drawTooltipOnHover(this.toolTipLayer, this.stage);
-                            barX += this.scale.categoryWidth;
-
+                            }
                         }
                     }
                 }
-            }
         });
         return columnChart;
     }(chart));
@@ -394,44 +417,43 @@ window.Chart = (function() {
                 }
             },
             drawShapes: {
-                value: function() {
+                value: function(){
                     var barMargin = (this.scale.categoryWidth * 0.5),
                         POINT_RADIUS = 4;
+                        
+                        //draw lines
+                        for(var i = 0; i < this.series.length; i++){
+                            var lineStartingX = barMargin,
+                                color = this.series[i].color,
+                                currentSeriePoints = [],
+                                line;
 
-                    //draw lines
-                    for (var i = 0; i < this.series.length; i++) {
-                        var lineStartingX = barMargin,
-                            color = this.series[i].color,
-                            currentSeriePoints = [],
-                            layer = new Kinetic.Layer(),
-                            line;
+                            for(var j = 0; j < this.series[i].values.length; j++){
+                                var ratioToChartScale = Math.abs(this.scale.valuesRange.max - this.series[i].values[j]) / this.scale.valuesRange.absDifference,
+                                    lineStartingY = this.scale.topLeftY + (ratioToChartScale * this.scale.innerHeight),
+                                    tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
+                                    circle;
 
-                        for (var j = 0; j < this.series[i].values.length; j++) {
-                            var ratioToChartScale = Math.abs(this.scale.valuesRange.max - this.series[i].values[j]) / this.scale.valuesRange.absDifference,
-                                lineStartingY = this.scale.topLeftY + (ratioToChartScale * this.scale.innerHeight),
-                                tooltip = tooltip = tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
-                                circle;
+                                currentSeriePoints.push(lineStartingX);
+                                currentSeriePoints.push(lineStartingY);
+                                
+                                circle = chart.shapes.getCircle(lineStartingX, lineStartingY, POINT_RADIUS, this.series[i].color, tooltip);
+                                circle.draw(this.series[i].layer, this.stage);
+                                circle.drawTooltipOnHover(this.toolTipLayer, this.stage);
+                                lineStartingX += this.scale.categoryWidth;
+                            }
 
-                            currentSeriePoints.push(lineStartingX);
-                            currentSeriePoints.push(lineStartingY);
-
-                            circle = chart.shapes.getCircle(lineStartingX, lineStartingY, POINT_RADIUS, this.series[i].color, tooltip);
-                            circle.draw(layer, this.stage);
-                            circle.drawTooltipOnHover(this.toolTipLayer, this.stage);
-                            lineStartingX += this.scale.categoryWidth;
+                            line = new Kinetic.Line({
+                                points: currentSeriePoints,
+                                stroke: this.series[i].color,
+                                strokeWidth: 2,
+                                lineJoin: 'round'
+                            });
+                            this.series[i].layer.add(line);
+                            this.stage.add(this.series[i].layer);
                         }
-
-                        line = new Kinetic.Line({
-                            points: currentSeriePoints,
-                            stroke: this.series[i].color,
-                            strokeWidth: 2,
-                            lineJoin: 'round'
-                        });
-                        layer.add(line);
-                        this.stage.add(layer);
                     }
                 }
-            }
         });
         return lineChart;
     }(chart));
@@ -444,7 +466,7 @@ window.Chart = (function() {
                 value: function(elementId, options) {
                     parent.init.call(this, elementId, options);
 
-                    this.scale = Object.create(verticalScale).init(this);
+                    this.scale = Object.create(scale).init(this);
                     this.drawShapes();
                     return this;
                 }
@@ -504,7 +526,6 @@ window.Chart = (function() {
                     }
 
                     //draw pies
-                    var layer = new Kinetic.Layer();
                     for (var k = 0; k < this.series[0].values.length; k += 1) {
                         var pieRadius = 80,
                             positionX = 2 * k * (pieRadius + 10) + 120,
@@ -516,9 +537,9 @@ window.Chart = (function() {
                             var endPercent = Math.abs(this.series[j].values[k]) / pieCategory[k][this.categories[k]] * 100;
 
                             if (j === 0) {
-                                pieArc(0, endPercent / 50, color, positionX, positionY, pieRadius,layer,this.stage);
+                                pieArc(0, endPercent / 50, color, positionX, positionY, pieRadius,this.series[k].layer,this.stage);
                             } else {
-                                pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX, positionY, pieRadius,layer,this.stage);
+                                pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX, positionY, pieRadius,this.series[k].layer,this.stage);
                             }
                             currentPercent += endPercent / 50;
                         }
@@ -830,6 +851,23 @@ window.Chart = (function() {
         return verticalScale;
     }(scale));
 
+    serie = (function(){
+        var serie = {};
+        
+        Object.defineProperties(serie, {
+            init: {
+                value:function(title, values, color, layer){
+                    this.title = title;
+                    this.values = values;
+                    this.color = color;
+                    this.layer = layer;
+                    return this;
+                }
+            }
+        });
+        
+        return serie;
+    }());
 
 
     return {
