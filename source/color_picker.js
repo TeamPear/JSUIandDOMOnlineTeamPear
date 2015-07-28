@@ -461,7 +461,7 @@ var colorPicker = (function (){
             cx = this._radius - 1;
             cy = cx;
 
-            for (x = 0; x < height; x += .5 ) {
+            for (x = 0; x < height + 1; x += .5 ) {
 
                 fColor.r = 255 - Math.round(( 255 - color.r ) / ( height ) * ( height - x ));
                 fColor.g = 255 - Math.round(( 255 - color.g ) / ( height ) * ( height - x ));
