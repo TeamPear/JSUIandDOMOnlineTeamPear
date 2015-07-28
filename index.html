@@ -29,16 +29,22 @@
 
     for (var i = 0; i < percent.length; i += 1) {
         if (i === 0) {
-            layer.add(pieArc(0, percent[i] / 50, newFont[i]));
+            pieArc(0, percent[i] / 50, newFont[i], layer, stage);
             layer.add(doughnutArc(0, percent[i] / 50, newFont[i]));
         } else {
-            layer.add(pieArc(currentPercent, (currentPercent + (percent[i] / 50)), newFont[i]));
+            pieArc(currentPercent, (currentPercent + (percent[i] / 50)), newFont[i], layer, stage);
             layer.add(doughnutArc(currentPercent, (currentPercent + (percent[i] / 50)), newFont[i]));
         }
         currentPercent += percent[i] / 50;
     }
 
-    function pieArc(startPercent, endPercent, font) {
+    function pieArc(startPercent, endPercent, font, layer, stage) {
+        var ANIMATION_SPEED = 0.005,
+            animationStart = startPercent,
+            targetRadius = endPercent,
+            animationStep = startPercent+ANIMATION_SPEED,
+            animation;
+
         var pieArc = new Kinetic.Shape({
             fill: font,
             stroke: 'white',
@@ -47,8 +53,8 @@
                 var x = stage.getWidth() / 2 - 150;
                 var y = stage.getHeight() / 2;
                 var radius = 150;
-                var startAngle = startPercent * Math.PI;
-                var endAngle = endPercent * Math.PI;
+                var startAngle = animationStart * Math.PI;
+                var endAngle = animationStep * Math.PI;
                 context.beginPath();
                 context.moveTo(x, y);
                 context.arc(x, y, radius, startAngle, endAngle, false);
@@ -56,7 +62,18 @@
                 context.fillStrokeShape(this);
             }
         });
-        return pieArc;
+
+        animation = new Kinetic.Animation(function(frame) {
+            if (animationStep >= targetRadius) {
+                animation.stop();
+            }
+            animationStep += ANIMATION_SPEED;
+        }, layer);
+
+        layer.add(pieArc);
+        stage.add(layer);
+        animation.start();
+
     }
 
     function doughnutArc(startPercent, endPercent, font) {
@@ -78,7 +95,6 @@
         return doughnutArc;
     }
 
-    stage.add(layer);
 
     var board = document.getElementById('kinetic-container');
     var positionX,
@@ -91,8 +107,6 @@
     }
 
     board.addEventListener('click', onBoardClick);
-
-    
     </script>
 </body>
 
