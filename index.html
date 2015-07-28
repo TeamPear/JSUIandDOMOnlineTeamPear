@@ -78,8 +78,21 @@
         return doughnutArc;
     }
 
-
     stage.add(layer);
+
+    var board = document.getElementById('kinetic-container');
+    var positionX,
+        positionY;
+
+    function onBoardClick(ev) {
+        positionX = ev.offsetX;
+        positionY = ev.offsetY;
+        console.log(positionX + ', ' + positionY);
+    }
+
+    board.addEventListener('click', onBoardClick);
+
+    
     </script>
 </body>
 
