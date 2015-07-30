@@ -8,17 +8,42 @@ var
             tableID = 0,
             table = {};
 
-        function numberCellCheck ( ) {
-            var
-                el = $(this),
-                val = parseFloat( el.val() );
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
 
-            if (el.hasClass('numberCell')) {
-                if ( ( val != el.val() ) && ( el.val() !== '' ) ) {
-                    alert( el.val () + ' is not a number!' );
+        function hexToRgb(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+
+        function numberCellCheck() {
+            var
+                $cell = $(this),
+                val = parseFloat( $cell.val() );
+
+            if ($cell.hasClass('numberCell')) {
+                if ( ( val != $cell.val() ) && ( $cell.val() !== '' ) ) {
+                    alert( $cell.val () + ' is not a number!' );
                 }
             }
-        }
+        };
+
+        function colorBtnClick () {
+            var
+                $btn = $(this),
+                color = table._colorPicker.color,
+                reverse = rgbToHex( 255 - hexToRgb(color).r, 255 - hexToRgb(color).g, 255 - hexToRgb(color).b );
+
+            console.log(table._colorPicker.color)
+            $btn.parent().prev().html( color ).attr( 'style', 'background-color: ' + color + '; color: ' + reverse + ';' );
+
+        };
+
         function newNumberCell( col, row ) {
             return $('<td/>').append( $('<input id="' + table.id + '?' + 'col=' + col + '&row=' + row + ' type="text" />').addClass('numberCell') );
         };
@@ -67,6 +92,11 @@ var
                 this._rowCount = 1;
 
                 this._table.on( 'focusout', 'input', numberCellCheck );
+                this._table.on( 'click', '.colorBtn', colorBtnClick );
+
+                $('#' + containerID).append( $('<div id="colorPickerContainer"></div>' ) );
+
+                this._colorPicker = colorPicker.init( 'colorPickerContainer');
 
                 return this;
             }
