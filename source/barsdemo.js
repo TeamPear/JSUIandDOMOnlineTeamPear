@@ -12,16 +12,29 @@ window.Chart = (function() {
         var chart = {},
             TITLE_HEIGHT = 30,
             TITLE_SIZE_RATIO = 1.5;
+			
+		function _extractLegendData(series){
+			var legendData = {};
+			for(var  i = 0; i < series.length; i++){
+				var title = series[i].title,
+					color = series[i].color;
+				legendData[title] = color;
+			}
+			
+			return legendData;
+		}
 
 
         Object.defineProperties(chart, {
             init: {
                 value: function(elementId, options) {
-                    var element = document.getElementById(elementId);
+                    var element = document.getElementById(elementId),
+						legendData = _extractLegendData(options.series);
+						
                     this.outerWidth = options.width;
                     this.outerHeight = options.height;
                     this.options = options;
-                    this.series = [];
+                    this.series = [];					
                     this.categories = options.categories;
                     this.labelPadding = options.labelPadding;
                     this.fontSize = options.fontSize;
@@ -41,10 +54,15 @@ window.Chart = (function() {
                         width: options.width,
                         height: options.height
                     });
-
+					
+					//Draw Title
                     if (this.title != null && this.title.length > 0) {
                         this.drawTitle();
                     }
+					
+					//Draw Legend
+					this.legend = Object.create(legend).init(legendData);
+					this.legend.appendTo(element);
 
                     //parse series input into Serie objects, containing their own layer and Kinetic elements
                     for(var i = 0; i < options.series.length; i++){
@@ -315,7 +333,7 @@ window.Chart = (function() {
                     parent.init.call(this, elementId, options);
 
                     this.scale = Object.create(horizontalScale).init(this);
-                    this.drawShapes();
+                    this.drawShapes();					
                     return this;
                 }
             },
@@ -869,6 +887,69 @@ window.Chart = (function() {
         return serie;
     }());
 
+	legend = (function(){
+		var legend = {},
+			SVG = 'http://www.w3.org/2000/svg',
+			WIDTH = 250,
+			PADDING = 10,
+			TEXT_HEIGHT = 20,
+			COLOR_BOX_SIZE = 10;
+		
+		Object.defineProperties(legend, {
+			init: {
+				value:function(data){
+					this.width = WIDTH;
+					this.count = Object.keys(data).length;
+					this.height = this.count * TEXT_HEIGHT;
+					this.data = data;
+					return this;
+				}
+			},
+			appendTo: {
+				value: 	function(parent){
+					var svgContainer = parent.getElementsByTagName('svg')[0];
+						startY = PADDING,
+                        startX = PADDING;
+						
+					if(svgContainer){
+						svgContainer.innerHTML = '';
+					}else{
+						svgContainer = document.createElementNS(SVG, 'svg');
+					}
+					
+					svgContainer.setAttribute('id', 'legend');
+					svgContainer.setAttribute('width', this.width);
+					svgContainer.setAttribute('height', this.height);
+					
+					for(var serieTitle in this.data){
+						var text,
+							size;
+					
+						rect = document.createElementNS(SVG, 'rect');
+						rect.setAttribute('x', PADDING);
+						rect.setAttribute('y', startY);
+						rect.setAttribute('width', COLOR_BOX_SIZE);
+						rect.setAttribute('height', COLOR_BOX_SIZE);
+						rect.setAttribute('fill', this.data[serieTitle]);
+						
+						text = document.createElementNS(SVG, 'text');
+						text.setAttribute('x', (PADDING * 2) + COLOR_BOX_SIZE);
+						text.setAttribute('y', startY + COLOR_BOX_SIZE);
+						text.setAttribute('fill', COLOR_BOX_SIZE);
+						text.textContent= serieTitle;
+						startY += TEXT_HEIGHT;
+						svgContainer.appendChild(rect);
+						svgContainer.appendChild(text);
+						
+					}
+					
+					parent.appendChild(svgContainer);
+				}
+			}
+		});
+		
+		return legend;
+	}());
 
     return {
         bar: Object.create(barChart),
