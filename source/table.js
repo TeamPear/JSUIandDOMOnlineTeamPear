@@ -8,7 +8,7 @@ var
             tableID = 0,
             table = {};
 
-        function numberCellCheck ( event ) {
+        function numberCellCheck ( ) {
             var
                 el = $(this),
                 val = parseFloat( el.val() );
@@ -48,6 +48,7 @@ var
                 this._table.append( this._head );
                 this._head.append( $('<td/>').append( $('<span/>').addClass('titleSpan').html('Title') ) );
                 this._head.append( $('<td/>').append( newNumberCell( 'tile', 'head').find('.numberCell').removeClass('numberCell').addClass('titleCell').attr( 'placeholder', chartTitle) ) );
+                this._head.append( $('<td/>' ) );
                 this._head.append( $('<td/>').append( $('<button class="addRowBtn">Add row</button>').on('click', function () { table.addRow() } ) ) );
 
                 this._body = $('<tbody/>');
@@ -57,9 +58,10 @@ var
 
                 this._colCount = 1;
 
-                this._foot.append( $('<span>').addClass('footerSpan').html('Axis values') );
+                this._foot.append( $('<td/>').append( $('<span>').addClass('footerSpan').html('Axis values') ) );
                 this._foot.append( newNumberCell( 0, 'axis' ) );
-                this._foot.append( $('<button class="addColBtn">Add col</button>').on('click', function () { table.addCow() } ));
+                this._foot.append( $('<td/>' ) );
+                this._foot.append( $('<td/>').append( $('<button class="addColBtn">Add column</button>').on('click', function () { table.addCol() } ) ) );
 
                 this._body.append( newRow( 1 ) );
                 this._rowCount = 1;
@@ -70,7 +72,7 @@ var
             }
         });
 
-        Object.defineProperty( table, 'addCow', {
+        Object.defineProperty( table, 'addCol', {
             value: function() {
                 var
                     i;
@@ -80,6 +82,7 @@ var
                     newNumberCell( this.colCount, i ).insertAfter( this._table.children().find('#series' + i).children().find('.numberCell').last().parent() );
                 }
                 newNumberCell( this.colCount, 'axis' ).insertAfter( this._foot.children().find('.numberCell').last().parent() );
+                this._head.children().find('.titleCell').parent().attr( 'colspan', this.colCount );
             }
         });
 
