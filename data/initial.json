@@ -1,0 +1,39 @@
+{
+"width":600,
+"height":400,
+"series": [
+{
+"title": "France",
+"values": [190, 158, 200],
+"color": "#03a9f4"
+},
+{
+"title": "Germany",
+"values": [210, 250, 300],
+"color": "#3f51b5"
+},
+{
+"title": "USA",
+"values": [280, 290,100],
+"color": "#444444"
+}
+,
+{
+"title": "UK",
+"values": [280, 270, -500],
+"color": "#cccccc"
+},
+{
+"title": "Japan",
+"values": [180, 240, 300],
+"color": "#666666"
+}
+],
+"categories": [2001, 2002, 2003],
+"format": "%",
+"labelPadding": 10,
+"fontSize":10,
+"fontColor":"black",
+"guidesColor": "#ccc",
+"title": "Sample Chart"
+}
