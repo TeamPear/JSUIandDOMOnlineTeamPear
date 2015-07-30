@@ -1,22 +1,25 @@
 
 #tableContainer {
-    padding:15px;
+    padding: 15px;
     box-shadow:0 0 6px #888;
     display: inline-block;
 }
 
 #tableContainer table{
+    border: 1px solid #888;
+    border-radius: 6px;
     display: inline-block;
     float: left;
     border-collapse: collapse;
+    margin-bottom: 10px;
 }
 
 #tableContainer td {
-    padding:5px 10px;
+    padding:5px 5px;
+    width: 75px;
 }
 
 #tableContainer thead td{
-
     border-bottom:2px solid #2f75bb;
     padding:4px 10px;
     background-color:#ccc;
@@ -28,11 +31,12 @@
     background-color:#efefef;
     color:#666;
     font-weight:bold;
-
 }
+
 #tableContainer .colorBtn {
     border-bottom:2px solid #FFB870;
 }
+
 #tableContainer input{
     border:0;
     border-bottom:1px solid #ccc;
@@ -48,19 +52,34 @@
     text-transform: uppercase;
 }
 
-
+#tableContainer button.chartBtn {
+    width: 49%;
+    margin-left: 2%;
+    height: 20px;
+}
 
 .colorPickerContainer {
     display: inline-block;
     margin-left: 10px;
-    border: 1px solid black;
+    border: 1px solid #888;
     border-radius: 6px;
 }
 
 .instrumentBar {
+    clear: both;
+    margin-top: 10px;
+    padding: 10px 5px;
     display: block;
-    width: 100%;
-    border: 1px solid black;
+    width: calc(100% - 10px);
+    border: 1px solid #888;
+    border-radius: 6px;
+    align-content: center;
+}
+
+.instrumentBar select {
+    width : 49%;
+    height: 20px;
+    display: inline;
 }
 
 .clearfix:after {
