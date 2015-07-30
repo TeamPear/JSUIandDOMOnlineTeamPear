@@ -46,8 +46,9 @@ var
 
                 this._head = $('<thead/>');
                 this._table.append( this._head );
-                this._head.append( $('<span/>').addClass('titleSpan').html('Title: ' + chartTitle) );
-                this._head.append( $('<button class="addRowBtn">Add row</button>').on('click', function () { table.addRow() } ));
+                this._head.append( $('<td/>').append( $('<span/>').addClass('titleSpan').html('Title') ) );
+                this._head.append( $('<td/>').append( newNumberCell( 'tile', 'head').find('.numberCell').removeClass('numberCell').addClass('titleCell').attr( 'placeholder', chartTitle) ) );
+                this._head.append( $('<td/>').append( $('<button class="addRowBtn">Add row</button>').on('click', function () { table.addRow() } ) ) );
 
                 this._body = $('<tbody/>');
                 this._foot = $('<tfoot/>');
@@ -58,7 +59,7 @@ var
 
                 this._foot.append( $('<span>').addClass('footerSpan').html('Axis values') );
                 this._foot.append( newNumberCell( 0, 'axis' ) );
-                this._head.append( $('<button class="addCowBtn">Add cow</button>').on('click', function () { table.addCow() } ));
+                this._foot.append( $('<button class="addColBtn">Add col</button>').on('click', function () { table.addCow() } ));
 
                 this._body.append( newRow( 1 ) );
                 this._rowCount = 1;
