@@ -39,9 +39,52 @@ var
                 color = table._colorPicker.color,
                 reverse = rgbToHex( 255 - hexToRgb(color).r, 255 - hexToRgb(color).g, 255 - hexToRgb(color).b );
 
-            console.log(table._colorPicker.color)
-            $btn.parent().prev().html( color ).attr( 'style', 'background-color: ' + color + '; color: ' + reverse + ';' );
+            $btn.parent().prev().children().first().attr( 'style', 'background-color: ' + color + '; color: ' + reverse + ';' );
+            $btn.parent().prev().children().first().val( color );
 
+        };
+
+        function createChart() {
+            var
+                i, chart,
+                options = {};
+
+            options.width = table._table.parent().width();
+            options.height = 400;
+            options.series = [];
+
+            for (i = 1; i<= table.rowCount; i += 1 ) {
+                options.series.push( table.series(i) );
+            }
+
+            options.categories = table.axisValues();
+            options.format = '%';
+            options.labelPadding = 10;
+            options.fontSize = 10;
+            options.fontColor ='black';
+            options.guidesColor = '#ccc';
+            options.title = table.title;
+
+            if (!chart) {
+                table._table.parent().parent().append($('<div id="' + table.id + '_chartContainer">/'));
+            }
+
+            console.log(options);
+
+            switch (table._selector.val()) {
+                case 'bar':
+                    chart = Chart.bar.init(table.id + '_chartContainer', options);
+                    break;
+                case 'column':
+                    chart = Chart.column.init(table.id + '_chartContainer', options);
+                    break;
+                case 'line':
+                    chart = Chart.line.init(table.id + '_chartContainer', options);
+                    break;
+                case 'pie':
+                    chart = Chart.pie.init(table.id + '_chartContainer', options);
+                    break;
+            }
         };
 
         function newNumberCell( col, row ) {
@@ -54,9 +97,9 @@ var
                 result = $('<tr id="series' + rowNumber + '" />');
             result.append( $('<td/>').append( $('<input id="' + table.id + '?' + 'col=name' + '&row=' + rowNumber + ' type="text" placeholder="Series name" />').removeClass('numberCell').addClass('textCell') ) );
             for (i=0; i< table._colCount; i += 1) {
-                result.append( newNumberCell( i, rowNumber ));
+                result.append( newNumberCell( i + 1, rowNumber ));
             }
-            result.append( $('<td/>').addClass('colorCell').html( '#FFFFFF' ) );
+            result.append( $('<td/>').append( $('<input id="' + table.id + '?' + 'col=color' + '&row=' + rowNumber + ' type="text" readonly="readonly"/>').removeClass('numberCell').addClass('colorCell').val( '#FFFFFF') ) );
             result.append( $('<td/>').append( $('<button id="series"' + table.id + 'ColorBtn">Set color</button>').addClass('colorBtn') ))
             return result;
         };
@@ -84,7 +127,7 @@ var
                 this._colCount = 1;
 
                 this._foot.append( $('<td/>').append( $('<span>').addClass('footerSpan').html('Axis values') ) );
-                this._foot.append( newNumberCell( 0, 'axis' ) );
+                this._foot.append( newNumberCell( 1, 'axis' ) );
                 this._foot.append( $('<td/>' ) );
                 this._foot.append( $('<td/>').append( $('<button class="addColBtn">Add column</button>').on('click', function () { table.addCol() } ) ) );
 
@@ -102,9 +145,59 @@ var
                 this._selector.append( $('<option value="column">Column</option>') );
                 this._selector.append( $('<option value="line">Line</option>') );
                 this._selector.append( $('<option value="pie">Pie</option>') );
-                $('#' + containerID).append( $('<div id="' + this.id + '_InstrumentBar>"</div>').addClass( 'instrumentBar').append( this._selector ) );
+                this._instrumentBar = $('<div id="' + this.id + '_InstrumentBar>"</div>').addClass( 'instrumentBar');
+                this._instrumentBar.append( this._selector );
+                this._instrumentBar.append( $('<button class="chartBtn">Create Chart</button>').on('click', createChart ) );
+
+                $('#' + containerID).append( this._instrumentBar  );
 
                 return this;
+            }
+        });
+
+        Object.defineProperty( table, 'title', {
+             get: function () {
+                 return this._head.children().find('.titleCell').val();
+             }
+        } );
+
+        Object.defineProperty( table, 'cell', {
+            value: function ( col, row ) {
+                var
+                    addr = 'col=' + col + '&row=' + row;
+                return this._table.children().find( 'input[id*="' + addr + '"]').val();
+            }
+        });
+
+        Object.defineProperty( table, 'series', {
+            value: function (row) {
+                var
+                    i,
+                    result = {};
+
+                result.title = this.cell( 'name', row );
+                result.values = [];
+                for (i = 1; i <= this.colCount; i += 1 ) {
+                    result.values.push( +this.cell( i, row ) );
+                }
+
+                result.color = this.cell( 'color', row );
+
+                return result;
+            }
+        });
+
+        Object.defineProperty( table, 'axisValues', {
+            value: function () {
+                var
+                    i,
+                    result = [];
+
+                for (i = 1; i <= this.colCount; i += 1 ) {
+                    result.push( +this.cell( i, 'axis' ) );
+                }
+
+                return result;
             }
         });
 
