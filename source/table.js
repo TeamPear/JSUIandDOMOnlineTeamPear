@@ -69,8 +69,6 @@ var
                 table._table.parent().parent().append($('<div id="' + table.id + '_chartContainer">/'));
             }
 
-            console.log(options);
-
             switch (table._selector.val()) {
                 case 'bar':
                     chart = Chart.bar.init(table.id + '_chartContainer', options);
@@ -100,12 +98,12 @@ var
                 result.append( newNumberCell( i + 1, rowNumber ));
             }
             result.append( $('<td/>').append( $('<input id="' + table.id + '?' + 'col=color' + '&row=' + rowNumber + ' type="text" readonly="readonly"/>').removeClass('numberCell').addClass('colorCell').val( '#FFFFFF') ) );
-            result.append( $('<td/>').append( $('<button id="series"' + table.id + 'ColorBtn">Set color</button>').addClass('colorBtn') ))
+            result.append( $('<td/>').append( $('<button id="' + table.id + '_series' + rowNumber + '_ColorBtn">Set color</button>').addClass('colorBtn') ))
             return result;
         };
 
         Object.defineProperty( table, 'init', {
-            value: function (containerID, chartTitle) {
+            value: function (containerID, chartTitle, loadInitial) {
                 tableID += 1;
                 this._id = 'Table' + tableID;
 
@@ -115,7 +113,7 @@ var
                 this._head = $('<thead/>');
                 this._table.append( this._head );
                 this._head.append( $('<td/>').append( $('<span/>').addClass('titleSpan').html('Title') ) );
-                this._head.append( $('<td/>').append( newNumberCell( 'tile', 'head').find('.numberCell').removeClass('numberCell').addClass('titleCell').attr( 'placeholder', chartTitle) ) );
+                this._head.append( $('<td/>').append( newNumberCell( 'title', 'head').find('.numberCell').removeClass('numberCell').addClass('titleCell').attr( 'placeholder', chartTitle) ) );
                 this._head.append( $('<td/>' ) );
                 this._head.append( $('<td/>').append( $('<button class="addRowBtn">Add row</button>').on('click', function () { table.addRow() } ) ) );
 
@@ -151,53 +149,100 @@ var
 
                 $('#' + containerID).append( this._instrumentBar  );
 
+                if (loadInitial) {
+                    $.getJSON('./data/initial.json', function (data) {
+                        var
+                            i, len;
+                        for (i=1; i<data.categories.length; i += 1 ) {
+                            table.addCol();
+                        }
+                        table.axisValues( data.categories );
+                        table.series(1, data.series[0]);
+                        for (i=2, len = data.series.length; i < len; i += 1) {
+                            table.addRow();
+                            table.series( i, data.series[i-1] );
+                        }
+                        table.title = data.title;
+                    });
+                }
                 return this;
             }
         });
 
         Object.defineProperty( table, 'title', {
-             get: function () {
-                 return this._head.children().find('.titleCell').val();
-             }
+            get: function () {
+                return this._head.children().find('.titleCell').val();
+            },
+            set: function (newTitle) {
+                this._head.children().find('.titleCell').val(newTitle);
+            }
         } );
 
         Object.defineProperty( table, 'cell', {
-            value: function ( col, row ) {
+            value: function ( col, row, value ) {
                 var
                     addr = 'col=' + col + '&row=' + row;
-                return this._table.children().find( 'input[id*="' + addr + '"]').val();
+                if (typeof value === 'undefined') {
+                    return this._table.children().find('input[id*="' + addr + '"]').val();
+                } else {
+                    this._table.children().find('input[id*="' + addr + '"]').val(value);
+                }
+
             }
         });
 
         Object.defineProperty( table, 'series', {
-            value: function (row) {
+            value: function (row, values) {
                 var
                     i,
                     result = {};
 
-                result.title = this.cell( 'name', row );
-                result.values = [];
-                for (i = 1; i <= this.colCount; i += 1 ) {
-                    result.values.push( +this.cell( i, row ) );
+                if (typeof values === 'undefined') {
+                    result.title = this.cell('name', row);
+                    result.values = [];
+                    for (i = 1; i <= this.colCount; i += 1) {
+                        result.values.push(+this.cell(i, row));
+                    }
+
+                    result.color = this.cell('color', row);
+
+                    return result;
+                } else {
+                    this.cell('name', row, values.title);
+
+                    for (i = 1; i <= this.colCount; i += 1) {
+                        this.cell( i, row, values.values[i-1] );
+                    }
+
+                    this.cell('color', row, values.color.toUpperCase());
+
+                    var
+                        $btn = $('#' + table.id + '_series' + row + '_ColorBtn'),
+                        color = values.color,
+                        reverse = rgbToHex( 255 - hexToRgb(color).r, 255 - hexToRgb(color).g, 255 - hexToRgb(color).b );
+
+                   $btn.parent().prev().children().first().attr( 'style', 'background-color: ' + color + '; color: ' + reverse + ';' );
                 }
-
-                result.color = this.cell( 'color', row );
-
-                return result;
             }
         });
 
         Object.defineProperty( table, 'axisValues', {
-            value: function () {
+            value: function ( values ) {
                 var
                     i,
                     result = [];
 
-                for (i = 1; i <= this.colCount; i += 1 ) {
-                    result.push( +this.cell( i, 'axis' ) );
-                }
+                if (typeof values === 'undefined') {
+                    for (i = 1; i <= this.colCount; i += 1) {
+                        result.push(+this.cell(i, 'axis'));
+                    }
 
-                return result;
+                    return result;
+                } else {
+                    for (i = 1; i <= this.colCount; i += 1) {
+                        this.cell(i, 'axis', values[i-1]);
+                    }
+                }
             }
         });
 
