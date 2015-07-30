@@ -8,16 +8,85 @@
     <script type="text/javascript" src="./source/table.js"></script>
     <title></title>
     <style>
-        table {
+
+        #tableContainer {
+            padding:15px;
+            box-shadow:0 0 6px #888;
+            display: inline-block;
+        }
+
+        #tableContainer table{
             display: inline-block;
             float: left;
+            border-collapse: collapse;
         }
-        #colorPickerContainer {
-            border : 1px solid black;
+
+        #tableContainer td {
+            padding:5px 10px;
+        }
+
+        #tableContainer thead td{
+
+            border-bottom:2px solid #2f75bb;
+            padding:4px 10px;
+            background-color:#ccc;
+            color:white;
+            font-weight:bold;
+        }
+
+        #tableContainer tfoot{
+            background-color:#efefef;
+            color:#666;
+            font-weight:bold;
+
+        }
+        #tableContainer .colorBtn {
+            border-bottom:2px solid #FFB870;
+        }
+        #tableContainer input{
+            border:0;
+            border-bottom:1px solid #ccc;
+            width:100%;
+        }
+
+        #tableContainer button{
+            background-color:#888;
+            border:0;
+            color:white;
+            width:100%;
+            font-size:0.6em;
+            text-transform: uppercase;
+        }
+
+        .colorPickerContainer {
+            display: inline-block;
+            margin-left: 10px;
+            border: 1px solid black;
             border-radius: 6px;
-            display: inline-block;
-            float: left;
         }
+        
+        .instrumentBar {
+            display: block;
+            width: 100%;
+            border: 1px solid black;
+        }
+
+        .clearfix:before,
+        .clearfix:after {
+            content: "";
+            display: table;
+        }
+
+        .clearfix:after {
+            clear: both;
+        }
+
+        .clearfix {
+            zoom: 1; /* ie 6/7 */
+        }
+
+
+
     </style>
 </head>
 <body>
