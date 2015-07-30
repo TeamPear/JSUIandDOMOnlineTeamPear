@@ -108,7 +108,7 @@ var colorPicker = (function (){
 
     Object.defineProperty( colorPicker, 'init', {
         value: function (container) {
-            this._center = { x: 104, y: 104 };
+            this._center = { x: 94, y: 94 };
             this._width = 20;
             this._radius = 80;
             this._selectorAngle = 0;
@@ -368,9 +368,9 @@ var colorPicker = (function (){
             r = this._trData.data[( ( y * this._radius * 2) + x ) * 4];
             g = this._trData.data[( ( y * this._radius * 2) + x ) * 4 + 1];
             b = this._trData.data[( ( y * this._radius * 2) + x ) * 4 + 2];
-            this._color = rgbToHex( r, g, b );
+            this._color = rgbToHex( r, g, b).toUpperCase();
 
-            roundRect( this._ctx, this._center.x - this._radius, this._center.y + this._center.x, this._radius * 2, this._center.x - this._radius, 6, this._color, 'black' );
+            roundRect( this._ctx, this._center.x - this._radius, this._center.y + this._center.x, this._radius * 2, 24, 6, this._color, 'black' );
         }
     } );
 
