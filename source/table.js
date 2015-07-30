@@ -94,9 +94,15 @@ var
                 this._table.on( 'focusout', 'input', numberCellCheck );
                 this._table.on( 'click', '.colorBtn', colorBtnClick );
 
-                $('#' + containerID).append( $('<div id="colorPickerContainer"></div>' ) );
+                $('#' + containerID).append( $('<div id="' + this.id + '_ColorPicker"></div>').addClass( 'colorPickerContainer').addClass( 'clearfix' ) );
+                this._colorPicker = colorPicker.init( this.id + '_ColorPicker');
 
-                this._colorPicker = colorPicker.init( 'colorPickerContainer');
+                this._selector = $('<select id="' + this.id + '"_Selector"></select>').addClass( 'chartTypeSelector' );
+                this._selector.append( $('<option value="bar">Bar</option>') );
+                this._selector.append( $('<option value="column">Column</option>') );
+                this._selector.append( $('<option value="line">Line</option>') );
+                this._selector.append( $('<option value="pie">Pie</option>') );
+                $('#' + containerID).append( $('<div id="' + this.id + '_InstrumentBar>"</div>').addClass( 'instrumentBar').append( this._selector ) );
 
                 return this;
             }
