@@ -145,7 +145,6 @@ window.Chart = (function() {
                     this.element.on('mouseover', function(e) {
                         var shapeXSize = 0,
                             shapeYSize = 0;
-                        console.log("d");
                         //Set tooltip display coordinates relative to the bar size...
                         if (e.target.getWidth() != undefined && e.target.getHeight() != undefined) {
                             shapeXSize = e.target.getWidth() / 2;
@@ -210,21 +209,23 @@ window.Chart = (function() {
                 value: function(layer, stage) {
                     var ANIMATION_SPEED = 0.08,
                         animationStart = 0,
-                        animationStep = (Math.abs(this.element.getWidth()) / this.element.getWidth()) * Math.abs(this.element.getWidth()) * ANIMATION_SPEED,
-                        targetBarWidth = Math.abs(this.element.getWidth()),
+                        animationStep = this.element.getWidth() * ANIMATION_SPEED,
+                        targetBarWidth = this.element.getWidth(),
                         self = this,
                         animation;
 
                     //sets height to 0 and starts animation until the initial height is reached again
                     this.element.setWidth(animationStart);
                     animation = new Kinetic.Animation(function(frame) {
-                        var currentElementWidth = Math.abs(self.element.getWidth());
+                        var currentElementWidth = self.element.getWidth();
 
-                        if (currentElementWidth > targetBarWidth) {
+                        if (Math.abs(currentElementWidth) >= Math.abs(targetBarWidth)){
+                            self.element.setWidth(targetBarWidth);
                             animation.stop();
+                        }else{
+                            animationStart += animationStep;
+                            self.element.setWidth(animationStart);
                         }
-                        self.element.setWidth(animationStart);
-                        animationStart += animationStep;
                     }, layer);
 
                     layer.add(this.element);
@@ -243,21 +244,24 @@ window.Chart = (function() {
         Object.defineProperties(column, {
             draw: {
                 value: function(layer, stage) {
-                    var ANIMATION_SPEED = 0.08,
+                    var ANIMATION_SPEED = 0.03,
                         animationStart = 0,
-                        animationStep = (Math.abs(this.element.getHeight()) / this.element.getHeight()) * Math.abs(this.element.getHeight()) * ANIMATION_SPEED,
-                        targetBarHeight = Math.abs(this.element.getHeight()),
+                        animationStep = this.element.getHeight() * ANIMATION_SPEED,
+                        targetBarHeight = this.element.getHeight(),
                         self = this,
                         animation;
 
                     this.element.setHeight(animationStart);
                     animation = new Kinetic.Animation(function(frame) {
-                        var currentElementHeight = Math.abs(self.element.getHeight());
-                        if (currentElementHeight >= targetBarHeight) {
+                        var currentElementHeight = self.element.getHeight();
+                        if (Math.abs(currentElementHeight) >= Math.abs(targetBarHeight)) {
+                            self.element.setHeight(targetBarHeight);
                             animation.stop();
+                        } else {
+                            self.element.setHeight(animationStart);
+                            animationStart += animationStep;
                         }
-                        self.element.setHeight(animationStart);
-                        animationStart += animationStep;
+                        
                     }, layer);
 
                     layer.add(this.element);
