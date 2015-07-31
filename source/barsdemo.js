@@ -500,6 +500,7 @@ window.Chart = (function() {
                     var pieCategory = [],
                         percetPerYears = {},
                         sum = 0;
+
                     for (var k = 0; k < this.series[0].values.length; k += 1) {
 
                         for (var j = 0; j < this.series.length; j += 1) {
@@ -560,8 +561,11 @@ window.Chart = (function() {
 
                             if (j === 0) {
                                 pieArc(0, endPercent / 50, color, positionX, positionY, pieRadius,this.series[k].layer,this.stage);
-                            } else {
+                            } else if (j !== this.series.length - 1 ) {
                                 pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX, positionY, pieRadius,this.series[k].layer,this.stage);
+                            } else {
+                                console.log(currentPercent, (currentPercent + endPercent / 50 ))
+                                pieArc(currentPercent, (currentPercent + endPercent / 50 - 1 / ( pieRadius * 2 * Math.PI ) * 2 * Math.PI ), color, positionX, positionY, pieRadius,this.series[k].layer,this.stage);
                             }
                             currentPercent += endPercent / 50;
                         }
