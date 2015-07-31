@@ -19,6 +19,9 @@
     width: 75px;
 }
 
+#tableContainer td:last-of-type {
+    width: 100px;
+}
 #tableContainer thead td{
     border-bottom:2px solid #2f75bb;
     padding:4px 10px;
@@ -43,6 +46,19 @@
     width:100%;
 }
 
+#tableContainer input.colorCell {
+    text-align: center;
+}
+
+#tableContainer input.titleCell {
+    text-align: center;
+    height: 75%;
+}
+
+#tableContainer input.numberCell {
+    text-align: right;
+}
+
 #tableContainer button{
     background-color:#888;
     border:0;
@@ -50,12 +66,33 @@
     width:100%;
     font-size:0.6em;
     text-transform: uppercase;
+    border-radius: 4px;
+}
+
+#tableContainer button:not([disabled]):hover {
+    cursor: pointer;
+}
+
+#tableContainer button.labelBtn {
+    color: #444;
+    font-weight: bold;
+
 }
 
 #tableContainer button.chartBtn {
     width: 49%;
     margin-left: 2%;
     height: 20px;
+}
+
+#tableContainer button[class*="RowBtn"] {
+    width: 48%;
+    margin: 0px 1%;
+}
+
+#tableContainer button[class*="ColBtn"] {
+    width: 48%;
+    margin: 0px 1%;
 }
 
 .colorPickerContainer {
@@ -90,4 +127,8 @@
 
 .clearfix {
     zoom: 1;
+}
+
+.chartContainer {
+    margin-top: 10px;
 }
