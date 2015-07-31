@@ -66,7 +66,7 @@ var
             options.title = table.title;
 
             if (!chart) {
-                table._table.parent().parent().append($('<div id="' + table.id + '_chartContainer">/'));
+                table._table.parent().parent().append($('<div id="' + table.id + '_chartContainer">/').addClass('chartContainer'));
             }
 
             switch (table._selector.val()) {
@@ -115,7 +115,9 @@ var
                 this._head.append( $('<td/>').append( $('<span/>').addClass('titleSpan').html('Title') ) );
                 this._head.append( $('<td/>').append( newNumberCell( 'title', 'head').find('.numberCell').removeClass('numberCell').addClass('titleCell').attr( 'placeholder', chartTitle) ) );
                 this._head.append( $('<td/>' ) );
-                this._head.append( $('<td/>').append( $('<button class="addRowBtn">Add row</button>').on('click', function () { table.addRow() } ) ) );
+                this._head.append( $('<td/>').append( $('<button class="labelBtn" disabled="disabled">Row</button>') ) );
+                this._head.children().last().append( $('<button class="addRowBtn">Add</button>').on('click', function () { table.addRow() } ) );
+                this._head.children().last().append( $('<button class="removeRowBtn">Del</button>').on('click', function () { table.removeRow() } ) );
 
                 this._body = $('<tbody/>');
                 this._foot = $('<tfoot/>');
@@ -127,7 +129,10 @@ var
                 this._foot.append( $('<td/>').append( $('<span>').addClass('footerSpan').html('Axis values') ) );
                 this._foot.append( newNumberCell( 1, 'axis' ) );
                 this._foot.append( $('<td/>' ) );
-                this._foot.append( $('<td/>').append( $('<button class="addColBtn">Add column</button>').on('click', function () { table.addCol() } ) ) );
+//                this._foot.append( $('<td/>').append( $('<button class="addColBtn">Add column</button>').on('click', function () { table.addCol() } ) ) );
+                this._foot.append( $('<td/>').append( $('<button class="labelBtn" disabled="disabled">Column</button>') ) );
+                this._foot.children().last().append( $('<button class="addColBtn">Add</button>').on('click', function () { table.addCol() } ) );
+                this._foot.children().last().append( $('<button class="removeColBtn">Del</button>').on('click', function () { table.removeCol() } ) );
 
                 this._body.append( newRow( 1 ) );
                 this._rowCount = 1;
@@ -260,11 +265,31 @@ var
             }
         });
 
+        Object.defineProperty( table, 'removeCol', {
+            value: function () {
+
+                $( 'input[id*="col=' + this.colCount + '"]').parent().remove();
+
+                this._colCount -= 1;
+                this._head.children().find('.titleCell').parent().attr( 'colspan', this.colCount );
+            }
+        });
+
         Object.defineProperty( table, 'addRow', {
             value: function () {
                 this._rowCount += 1;
                 this._body.append(newRow(this.rowCount));
                 return this;
+            }
+        });
+
+        Object.defineProperty( table, 'removeRow', {
+            value: function () {
+                if (this.rowCount > 1 ) {
+                    $('#series' + this.rowCount).remove();
+                    this._rowCount -= 1;
+                    return this;
+                }
             }
         });
 
