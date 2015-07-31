@@ -568,8 +568,10 @@ window.Chart = (function() {
 
                             if (j === 0) {
                                 pieArc(0, endPercent / 50, color, positionX, positionY, pieRadius, this.series[k].layer, this.stage);
-                            } else {
+                            } else if ( j!=this.series.length - 1 ) {
                                 pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX, positionY, pieRadius, this.series[k].layer, this.stage);
+                            } else {
+                                pieArc(currentPercent, (currentPercent + endPercent / 50 - 1 / pieRadius ), color, positionX, positionY, pieRadius, this.series[k].layer, this.stage);
                             }
                             currentPercent += endPercent / 50;
                         }
