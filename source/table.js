@@ -114,7 +114,7 @@ var
                 this._table.append( this._head );
                 this._head.append( $('<td/>').append( $('<span/>').addClass('titleSpan').html('Title') ) );
                 this._head.append( $('<td/>').append( newNumberCell( 'title', 'head').find('.numberCell').removeClass('numberCell').addClass('titleCell').attr( 'placeholder', chartTitle) ) );
-                this._head.append( $('<td/>' ) );
+                this._head.append( $('<td/>') );
                 this._head.append( $('<td/>').append( $('<button class="labelBtn" disabled="disabled">Row</button>') ) );
                 this._head.children().last().append( $('<button class="addRowBtn">Add</button>').on('click', function () { table.addRow() } ) );
                 this._head.children().last().append( $('<button class="removeRowBtn">Del</button>').on('click', function () { table.removeRow() } ) );
@@ -129,7 +129,6 @@ var
                 this._foot.append( $('<td/>').append( $('<span>').addClass('footerSpan').html('Axis values') ) );
                 this._foot.append( newNumberCell( 1, 'axis' ) );
                 this._foot.append( $('<td/>' ) );
-//                this._foot.append( $('<td/>').append( $('<button class="addColBtn">Add column</button>').on('click', function () { table.addCol() } ) ) );
                 this._foot.append( $('<td/>').append( $('<button class="labelBtn" disabled="disabled">Column</button>') ) );
                 this._foot.children().last().append( $('<button class="addColBtn">Add</button>').on('click', function () { table.addCol() } ) );
                 this._foot.children().last().append( $('<button class="removeColBtn">Del</button>').on('click', function () { table.removeCol() } ) );
