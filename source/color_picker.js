@@ -370,7 +370,7 @@ var colorPicker = (function (){
             b = this._trData.data[( ( y * this._radius * 2) + x ) * 4 + 2];
             this._color = rgbToHex( r, g, b).toUpperCase();
 
-            roundRect( this._ctx, this._center.x - this._radius, this._center.y + this._center.x, this._radius * 2, 24, 6, this._color, 'black' );
+            roundRect( this._ctx, this._center.x - this._radius, this._center.y + this._center.x, this._radius * 2, 20, 6, this._color, 'black' );
         }
     } );
 
