@@ -12,29 +12,29 @@ window.Chart = (function() {
         var chart = {},
             TITLE_HEIGHT = 30,
             TITLE_SIZE_RATIO = 1.5;
-			
-		function _extractLegendData(series){
-			var legendData = {};
-			for(var  i = 0; i < series.length; i++){
-				var title = series[i].title,
-					color = series[i].color;
-				legendData[title] = color;
-			}
-			
-			return legendData;
-		}
+
+        function _extractLegendData(series) {
+            var legendData = {};
+            for (var i = 0; i < series.length; i++) {
+                var title = series[i].title,
+                    color = series[i].color;
+                legendData[title] = color;
+            }
+
+            return legendData;
+        }
 
 
         Object.defineProperties(chart, {
             init: {
                 value: function(elementId, options) {
                     var element = document.getElementById(elementId),
-						legendData = _extractLegendData(options.series);
-						
+                        legendData = _extractLegendData(options.series);
+
                     this.outerWidth = options.width;
                     this.outerHeight = options.height;
                     this.options = options;
-                    this.series = [];					
+                    this.series = [];
                     this.categories = options.categories;
                     this.labelPadding = options.labelPadding;
                     this.fontSize = options.fontSize;
@@ -54,23 +54,23 @@ window.Chart = (function() {
                         width: options.width,
                         height: options.height
                     });
-					
-					//Draw Title
+
+                    //Draw Title
                     if (this.title != null && this.title.length > 0) {
                         this.drawTitle();
                     }
-					
-					//Draw Legend
-					this.legend = Object.create(legend).init(legendData);
-					this.legend.appendTo(element);
+
+                    //Draw Legend
+                    this.legend = Object.create(legend).init(legendData);
+                    this.legend.appendTo(element);
 
                     //parse series input into Serie objects, containing their own layer and Kinetic elements
-                    for(var i = 0; i < options.series.length; i++){
+                    for (var i = 0; i < options.series.length; i++) {
                         var title = options.series[i].title,
                             values = options.series[i].values,
                             color = options.series[i].color,
                             singleSerie = Object.create(serie).init(title, values, color, new Kinetic.Layer(), this.stage);
-                            
+
                         this.series.push(singleSerie);
                     }
                 }
@@ -91,17 +91,25 @@ window.Chart = (function() {
                 }
             },
             updateSerieColor: {
-                value: function(index, color){
+                value: function(index, color) {
                     var serie = this.series[index],
                         elements = serie.layer.getChildren();
 
                     serie.layer.removeChildren();
-                    for(var i = 0; i < elements.length; i++){
-                        elements[i].setFill(color);
-                        if(elements[i].getClassName() === 'Line'){
-                            elements[i].setStroke(color);
+                    for (var i = 0; i < elements.length; i++) {
+                        if (elements[i].getClassName() === 'Line' ||
+                            elements[i].getClassName() === 'Rect' ||
+                            elements[i].getClassName() === 'Circle') {
+
+                            elements[i].setFill(color);
+                            if (elements[i].getClassName() === 'Line') {
+                                elements[i].setStroke(color);
+                            }
+                        } else {
+                            if (!(i % this.series.length)) {
+                                elements[i].setFill(color);
+                            }
                         }
-                        
                         serie.layer.add(elements[i]);
                     }
                     this.stage.add(serie.layer);
@@ -219,10 +227,10 @@ window.Chart = (function() {
                     animation = new Kinetic.Animation(function(frame) {
                         var currentElementWidth = self.element.getWidth();
 
-                        if (Math.abs(currentElementWidth) >= Math.abs(targetBarWidth)){
+                        if (Math.abs(currentElementWidth) >= Math.abs(targetBarWidth)) {
                             self.element.setWidth(targetBarWidth);
                             animation.stop();
-                        }else{
+                        } else {
                             animationStart += animationStep;
                             self.element.setWidth(animationStart);
                         }
@@ -261,7 +269,7 @@ window.Chart = (function() {
                             self.element.setHeight(animationStart);
                             animationStart += animationStep;
                         }
-                        
+
                     }, layer);
 
                     layer.add(this.element);
@@ -337,41 +345,41 @@ window.Chart = (function() {
                     parent.init.call(this, elementId, options);
 
                     this.scale = Object.create(horizontalScale).init(this);
-                    this.drawShapes();					
+                    this.drawShapes();
                     return this;
                 }
             },
             drawShapes: {
-                value: function(){
-                    var maxValue =  this.findGreatestAbsoluteValueIn(this.series),
+                value: function() {
+                    var maxValue = this.findGreatestAbsoluteValueIn(this.series),
                         ratioToChartScale = maxValue / this.scale.valuesRange.absDifference,
-                        maxValueBarSize = ratioToChartScale * this.scale.innerWidth ,
+                        maxValueBarSize = ratioToChartScale * this.scale.innerWidth,
                         barMargin = (this.scale.categoryWidth * 0.3) / (this.series.length + 1),
                         barWidth = (0.5 * this.scale.categoryWidth) / this.series.length;
-                        
-                        //draw bars
-                        for(var i = 0; i < this.series.length; i++){
-                            //For each serie adds  to the first bar position top margin and the size of the previous bars
-                            var barY = this.scale.topLeftY + i * barWidth + (i + 1) * barMargin ,
-                                color = this.series[i].color;
-                                
-                                
-                            for(var j = 0; j < this.series[i].values.length; j++){
 
-                                //The size of the current bar is it's ratio to to greatest value;
-                                //transformed into pixels by multiplying to the chart inner width 
-                                var ratioToMaxValue = this.series[i].values[j] / maxValue,
-                                    currentBarSize =  ratioToMaxValue * maxValueBarSize,
-                                    tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,                                 
-                                    bar = chart.shapes.getBar(this.scale.zeroValuePoint,barY, currentBarSize, barWidth, color, tooltip); //TO REMOVE
-                                    
-                                bar.draw(this.series[i].layer, this.stage);
-                                bar.drawTooltipOnHover(this.toolTipLayer, this.stage);
-                                barY += this.scale.categoryWidth;
-                            }
+                    //draw bars
+                    for (var i = 0; i < this.series.length; i++) {
+                        //For each serie adds  to the first bar position top margin and the size of the previous bars
+                        var barY = this.scale.topLeftY + i * barWidth + (i + 1) * barMargin,
+                            color = this.series[i].color;
+
+
+                        for (var j = 0; j < this.series[i].values.length; j++) {
+
+                            //The size of the current bar is it's ratio to to greatest value;
+                            //transformed into pixels by multiplying to the chart inner width 
+                            var ratioToMaxValue = this.series[i].values[j] / maxValue,
+                                currentBarSize = ratioToMaxValue * maxValueBarSize,
+                                tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
+                                bar = chart.shapes.getBar(this.scale.zeroValuePoint, barY, currentBarSize, barWidth, color, tooltip); //TO REMOVE
+
+                            bar.draw(this.series[i].layer, this.stage);
+                            bar.drawTooltipOnHover(this.toolTipLayer, this.stage);
+                            barY += this.scale.categoryWidth;
                         }
                     }
                 }
+            }
         });
         return barChart;
     }(chart));
@@ -390,37 +398,37 @@ window.Chart = (function() {
                 }
             },
             drawShapes: {
-                value: function(){
-                    var maxValue =  this.findGreatestAbsoluteValueIn(this.series),
+                value: function() {
+                    var maxValue = this.findGreatestAbsoluteValueIn(this.series),
                         ratioToChartScale = maxValue / this.scale.valuesRange.absDifference,
-                        maxValuecolumnSize = ratioToChartScale * this.scale.innerHeight ,
+                        maxValuecolumnSize = ratioToChartScale * this.scale.innerHeight,
                         columnMargin = (this.scale.categoryWidth * 0.3) / (this.series.length + 1),
                         columnWidth = (0.5 * this.scale.categoryWidth) / this.series.length;
-                        
-                        //draw bars
-                        for(var i = 0; i < this.series.length; i++){
 
-                            //For each serie adds  to the first column margin to the left and the size of the previous columns
-                            var columnX = this.scale.maxYLabelWidth + (i * columnWidth + (i + 1) * columnMargin),
-                                color = this.series[i].color;
-                                
-                            for(var j = 0; j < this.series[i].values.length; j++){
+                    //draw bars
+                    for (var i = 0; i < this.series.length; i++) {
 
-                                //The size of the current column is it's ratio to to greatest value;
-                                //transformed into pixels by multiplying to the chart inner width
-                                var ratioToMaxValue = this.series[i].values[j] / maxValue,
-                                    currentcolumnSize = -1 * ratioToMaxValue * maxValuecolumnSize,
-                                    tooltip = tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
-                                    column = chart.shapes.getColumn(columnX, this.scale.zeroValuePoint, columnWidth, currentcolumnSize, color, tooltip );
+                        //For each serie adds  to the first column margin to the left and the size of the previous columns
+                        var columnX = this.scale.maxYLabelWidth + (i * columnWidth + (i + 1) * columnMargin),
+                            color = this.series[i].color;
 
-                                column.draw(this.series[i].layer, this.stage);
-                                column.drawTooltipOnHover(this.toolTipLayer, this.stage);
-                                columnX += this.scale.categoryWidth;
+                        for (var j = 0; j < this.series[i].values.length; j++) {
 
-                            }
+                            //The size of the current column is it's ratio to to greatest value;
+                            //transformed into pixels by multiplying to the chart inner width
+                            var ratioToMaxValue = this.series[i].values[j] / maxValue,
+                                currentcolumnSize = -1 * ratioToMaxValue * maxValuecolumnSize,
+                                tooltip = tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
+                                column = chart.shapes.getColumn(columnX, this.scale.zeroValuePoint, columnWidth, currentcolumnSize, color, tooltip);
+
+                            column.draw(this.series[i].layer, this.stage);
+                            column.drawTooltipOnHover(this.toolTipLayer, this.stage);
+                            columnX += this.scale.categoryWidth;
+
                         }
                     }
                 }
+            }
         });
         return columnChart;
     }(chart));
@@ -439,43 +447,43 @@ window.Chart = (function() {
                 }
             },
             drawShapes: {
-                value: function(){
+                value: function() {
                     var barMargin = (this.scale.categoryWidth * 0.5),
                         POINT_RADIUS = 4;
-                        
-                        //draw lines
-                        for(var i = 0; i < this.series.length; i++){
-                            var lineStartingX = barMargin,
-                                color = this.series[i].color,
-                                currentSeriePoints = [],
-                                line;
 
-                            for(var j = 0; j < this.series[i].values.length; j++){
-                                var ratioToChartScale = Math.abs(this.scale.valuesRange.max - this.series[i].values[j]) / this.scale.valuesRange.absDifference,
-                                    lineStartingY = this.scale.topLeftY + (ratioToChartScale * this.scale.innerHeight),
-                                    tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
-                                    circle;
+                    //draw lines
+                    for (var i = 0; i < this.series.length; i++) {
+                        var lineStartingX = barMargin,
+                            color = this.series[i].color,
+                            currentSeriePoints = [],
+                            line;
 
-                                currentSeriePoints.push(lineStartingX);
-                                currentSeriePoints.push(lineStartingY);
-                                
-                                circle = chart.shapes.getCircle(lineStartingX, lineStartingY, POINT_RADIUS, this.series[i].color, tooltip);
-                                circle.draw(this.series[i].layer, this.stage);
-                                circle.drawTooltipOnHover(this.toolTipLayer, this.stage);
-                                lineStartingX += this.scale.categoryWidth;
-                            }
+                        for (var j = 0; j < this.series[i].values.length; j++) {
+                            var ratioToChartScale = Math.abs(this.scale.valuesRange.max - this.series[i].values[j]) / this.scale.valuesRange.absDifference,
+                                lineStartingY = this.scale.topLeftY + (ratioToChartScale * this.scale.innerHeight),
+                                tooltip = this.series[i].title + ': ' + this.series[i].values[j] + this.options.format,
+                                circle;
 
-                            line = new Kinetic.Line({
-                                points: currentSeriePoints,
-                                stroke: this.series[i].color,
-                                strokeWidth: 2,
-                                lineJoin: 'round'
-                            });
-                            this.series[i].layer.add(line);
-                            this.stage.add(this.series[i].layer);
+                            currentSeriePoints.push(lineStartingX);
+                            currentSeriePoints.push(lineStartingY);
+
+                            circle = chart.shapes.getCircle(lineStartingX, lineStartingY, POINT_RADIUS, this.series[i].color, tooltip);
+                            circle.draw(this.series[i].layer, this.stage);
+                            circle.drawTooltipOnHover(this.toolTipLayer, this.stage);
+                            lineStartingX += this.scale.categoryWidth;
                         }
+
+                        line = new Kinetic.Line({
+                            points: currentSeriePoints,
+                            stroke: this.series[i].color,
+                            strokeWidth: 2,
+                            lineJoin: 'round'
+                        });
+                        this.series[i].layer.add(line);
+                        this.stage.add(this.series[i].layer);
                     }
                 }
+            }
         });
         return lineChart;
     }(chart));
@@ -559,9 +567,9 @@ window.Chart = (function() {
                             var endPercent = Math.abs(this.series[j].values[k]) / pieCategory[k][this.categories[k]] * 100;
 
                             if (j === 0) {
-                                pieArc(0, endPercent / 50, color, positionX, positionY, pieRadius,this.series[k].layer,this.stage);
+                                pieArc(0, endPercent / 50, color, positionX, positionY, pieRadius, this.series[k].layer, this.stage);
                             } else {
-                                pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX, positionY, pieRadius,this.series[k].layer,this.stage);
+                                pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX, positionY, pieRadius, this.series[k].layer, this.stage);
                             }
                             currentPercent += endPercent / 50;
                         }
@@ -873,12 +881,12 @@ window.Chart = (function() {
         return verticalScale;
     }(scale));
 
-    serie = (function(){
+    serie = (function() {
         var serie = {};
-        
+
         Object.defineProperties(serie, {
             init: {
-                value:function(title, values, color, layer){
+                value: function(title, values, color, layer) {
                     this.title = title;
                     this.values = values;
                     this.color = color;
@@ -887,73 +895,73 @@ window.Chart = (function() {
                 }
             }
         });
-        
+
         return serie;
     }());
 
-	legend = (function(){
-		var legend = {},
-			SVG = 'http://www.w3.org/2000/svg',
-			WIDTH = 250,
-			PADDING = 10,
-			TEXT_HEIGHT = 20,
-			COLOR_BOX_SIZE = 10;
-		
-		Object.defineProperties(legend, {
-			init: {
-				value:function(data){
-					this.width = WIDTH;
-					this.count = Object.keys(data).length;
-					this.height = this.count * TEXT_HEIGHT;
-					this.data = data;
-					return this;
-				}
-			},
-			appendTo: {
-				value: 	function(parent){
-					var svgContainer = parent.getElementsByTagName('svg')[0];
-						startY = PADDING,
+    legend = (function() {
+        var legend = {},
+            SVG = 'http://www.w3.org/2000/svg',
+            WIDTH = 250,
+            PADDING = 10,
+            TEXT_HEIGHT = 20,
+            COLOR_BOX_SIZE = 10;
+
+        Object.defineProperties(legend, {
+            init: {
+                value: function(data) {
+                    this.width = WIDTH;
+                    this.count = Object.keys(data).length;
+                    this.height = this.count * TEXT_HEIGHT;
+                    this.data = data;
+                    return this;
+                }
+            },
+            appendTo: {
+                value: function(parent) {
+                    var svgContainer = parent.getElementsByTagName('svg')[0];
+                    startY = PADDING,
                         startX = PADDING;
-						
-					if(svgContainer){
-						svgContainer.innerHTML = '';
-					}else{
-						svgContainer = document.createElementNS(SVG, 'svg');
-					}
-					
-					svgContainer.setAttribute('id', 'legend');
-					svgContainer.setAttribute('width', this.width);
-					svgContainer.setAttribute('height', this.height);
-					
-					for(var serieTitle in this.data){
-						var text,
-							size;
-					
-						rect = document.createElementNS(SVG, 'rect');
-						rect.setAttribute('x', PADDING);
-						rect.setAttribute('y', startY);
-						rect.setAttribute('width', COLOR_BOX_SIZE);
-						rect.setAttribute('height', COLOR_BOX_SIZE);
-						rect.setAttribute('fill', this.data[serieTitle]);
-						
-						text = document.createElementNS(SVG, 'text');
-						text.setAttribute('x', (PADDING * 2) + COLOR_BOX_SIZE);
-						text.setAttribute('y', startY + COLOR_BOX_SIZE);
-						text.setAttribute('fill', COLOR_BOX_SIZE);
-						text.textContent= serieTitle;
-						startY += TEXT_HEIGHT;
-						svgContainer.appendChild(rect);
-						svgContainer.appendChild(text);
-						
-					}
-					
-					parent.appendChild(svgContainer);
-				}
-			}
-		});
-		
-		return legend;
-	}());
+
+                    if (svgContainer) {
+                        svgContainer.innerHTML = '';
+                    } else {
+                        svgContainer = document.createElementNS(SVG, 'svg');
+                    }
+
+                    svgContainer.setAttribute('id', 'legend');
+                    svgContainer.setAttribute('width', this.width);
+                    svgContainer.setAttribute('height', this.height);
+
+                    for (var serieTitle in this.data) {
+                        var text,
+                            size;
+
+                        rect = document.createElementNS(SVG, 'rect');
+                        rect.setAttribute('x', PADDING);
+                        rect.setAttribute('y', startY);
+                        rect.setAttribute('width', COLOR_BOX_SIZE);
+                        rect.setAttribute('height', COLOR_BOX_SIZE);
+                        rect.setAttribute('fill', this.data[serieTitle]);
+
+                        text = document.createElementNS(SVG, 'text');
+                        text.setAttribute('x', (PADDING * 2) + COLOR_BOX_SIZE);
+                        text.setAttribute('y', startY + COLOR_BOX_SIZE);
+                        text.setAttribute('fill', COLOR_BOX_SIZE);
+                        text.textContent = serieTitle;
+                        startY += TEXT_HEIGHT;
+                        svgContainer.appendChild(rect);
+                        svgContainer.appendChild(text);
+
+                    }
+
+                    parent.appendChild(svgContainer);
+                }
+            }
+        });
+
+        return legend;
+    }());
 
     return {
         bar: Object.create(barChart),

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Team Pear</title>
+    <script src="source/lib/kinetic.js"></script>
+    <style type="text/css">
+    canvas {
+        border: 1px solid green !important;
+    }
+    </style>
+</head>
+
+<body>
+    <div id="kinetic-container"></div>
+    <script type="text/javascript">
+    var stage = new Kinetic.Stage({
+        container: 'kinetic-container',
+        width: 800,
+        height: 500
+    });
+
+    var layer = new Kinetic.Layer();
+
+    var percent = [10, 10, 20, 10, 30, 20];
+    var currentPercent = 0;
+    var newFont = ['#03a9f4', '#3f51b5', '#444', '#ccc', '#666', '#888'];
+
+    for (var i = 0; i < percent.length; i += 1) {
+        if (i === 0) {
+            pieArc(0, percent[i] / 50, newFont[i], layer, stage);
+            layer.add(doughnutArc(0, percent[i] / 50, newFont[i]));
+        } else {
+            pieArc(currentPercent, (currentPercent + (percent[i] / 50)), newFont[i], layer, stage);
+            layer.add(doughnutArc(currentPercent, (currentPercent + (percent[i] / 50)), newFont[i]));
+        }
+        currentPercent += percent[i] / 50;
+    }
+
+    function pieArc(startPercent, endPercent, font, layer, stage) {
+        var ANIMATION_SPEED = 0.005,
+            animationStart = startPercent,
+            targetRadius = endPercent,
+            animationStep = startPercent + ANIMATION_SPEED,
+            animation;
+
+        var pieArc = new Kinetic.Shape({
+            fill: font,
+            stroke: 'white',
+            strokeWidth: 3,
+            drawFunc: function(context) {
+                var x = stage.getWidth() / 2 - 150;
+                var y = stage.getHeight() / 2;
+                var radius = 150;
+                var startAngle = animationStart * Math.PI;
+                var endAngle = animationStep * Math.PI;
+                context.beginPath();
+                context.moveTo(x, y);
+                context.arc(x, y, radius, startAngle, endAngle, false);
+                //context.closePath();
+                context.fillStrokeShape(this);
+            }
+        });
+
+        animation = new Kinetic.Animation(function(frame) {
+            if (animationStep >= targetRadius) {
+                animation.stop();
+            }
+            animationStep += ANIMATION_SPEED;
+        }, layer);
+
+        layer.add(pieArc);
+        stage.add(layer);
+        animation.start();
+
+    }
+
+    function doughnutArc(startPercent, endPercent, font) {
+        var doughnutArc = new Kinetic.Shape({
+            stroke: font,
+            strokeWidth: 100,
+            drawFunc: function(context) {
+                var x = stage.getWidth() / 2 + 150;
+                var y = stage.getHeight() / 2;
+                var radius = 100;
+                var startAngle = startPercent * Math.PI;
+                var endAngle = endPercent * Math.PI;
+                context.beginPath();
+                context.arc(x, y, radius, startAngle, endAngle, false);
+                //context.closePath();
+                context.fillStrokeShape(this);
+            }
+        });
+        return doughnutArc;
+    }
+
+
+    var board = document.getElementById('kinetic-container');
+    var positionX,
+        positionY;
+
+    function onBoardClick(ev) {
+        positionX = ev.offsetX;
+        positionY = ev.offsetY;
+        console.log(positionX + ', ' + positionY);
+    }
+
+    board.addEventListener('click', onBoardClick);
+    </script>
+</body>
+
+</html>
