@@ -519,7 +519,7 @@ window.Chart = (function() {
                     }
 
                     // draw piece of pie arc
-                    function pieArc(startPercent, endPercent, color, positionX, positionY, pieRadius, layer, stage) {
+                    function pieArc(startPercent, endPercent, color, positionX, positionY, pieRadius, layer, stage, cnt) {
                         var ANIMATION_SPEED = 0.005,
                             animationStart = startPercent,
                             targetRadius = endPercent,
@@ -543,6 +543,14 @@ window.Chart = (function() {
                                 context.fillStrokeShape(this);
                             }
                         });
+                        var pieArcText = new Kinetic.Text( {
+                            x: positionX - 15,
+                            y: positionY  + pieRadius + 20 + cnt * 20,
+                            text: parseFloat(Math.round((endPercent - startPercent) * 180 / Math.PI)).toFixed(2) + '[%]',
+                            fontSize: this.fontSize,
+                            fill: 'black'
+                        });
+
                         animation = new Kinetic.Animation(function(frame) {
                             if (animationStep >= targetRadius) {
                                 animation.stop();
@@ -550,6 +558,7 @@ window.Chart = (function() {
                             animationStep += ANIMATION_SPEED;
                         }, layer);
 
+                        layer.add(pieArcText);
                         layer.add(pieArc);
                         stage.add(layer);
                         animation.start();
@@ -567,11 +576,11 @@ window.Chart = (function() {
                             var endPercent = Math.abs(this.series[j].values[k]) / pieCategory[k][this.categories[k]] * 100;
 
                             if (j === 0) {
-                                pieArc(0, endPercent / 50, color, positionX, positionY, pieRadius, this.series[k].layer, this.stage);
+                                pieArc(0, endPercent / 50, color, positionX, positionY, pieRadius, this.series[k].layer, this.stage, j );
                             } else if ( j!=this.series.length - 1 ) {
-                                pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX, positionY, pieRadius, this.series[k].layer, this.stage);
+                                pieArc(currentPercent, (currentPercent + endPercent / 50), color, positionX, positionY, pieRadius, this.series[k].layer, this.stage, j);
                             } else {
-                                pieArc(currentPercent, (currentPercent + endPercent / 50 - 1 / pieRadius ), color, positionX, positionY, pieRadius, this.series[k].layer, this.stage);
+                                pieArc(currentPercent, (currentPercent + endPercent / 50 - 1 / pieRadius ), color, positionX, positionY, pieRadius, this.series[k].layer, this.stage, j);
                             }
                             currentPercent += endPercent / 50;
                         }
@@ -794,7 +803,7 @@ window.Chart = (function() {
             drawCategories: {
                 value: function(yCoordinate) {
                     var categoryLabel,
-                        labelX = this.categoryWidth * 0.35,
+                        labelX = this.categoryWidth * .45,
                         currentLabelWidth,
                         categoryLabelText;
 
